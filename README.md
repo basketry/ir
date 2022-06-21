@@ -3,7 +3,7 @@
 
 # Low-level Basketry IR components
 
-This package provides a "raw IR" perser and generator for [Basketry](https://github.com/basketry/basketry)'s Intermediate Representation format. These tools are useful when debugging in-development components or when connecting a Basketry pipeline into another toolchain.
+This package provides a "raw IR" parser and generator for [Basketry](https://github.com/basketry/basketry)'s Intermediate Representation format. These tools are useful when debugging in-development components or when connecting a Basketry pipeline into another toolchain.
 
 [A list of full-featured Basketry components can be found on the wiki.](https://github.com/basketry/basketry/wiki#components)
 
