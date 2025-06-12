@@ -6,13 +6,13 @@
   "scripts": {
     "test": "jest",
     "clean": "run-s -s clean:*",
-    "create-snapshot": "ts-node ./src/snapshot/create-snapshot.ts",
     "lint": "run-s -s lint:*",
     "fix": "run-s -s fix:*",
     "clean:output": "rimraf lib",
     "start": "node ./lib/index.js",
     "prebuild": "run-s -s clean lint",
     "build": "tsc",
+    "postbuild": "node -e \"require('fs').copyFileSync('src/schema.json','lib/schema.json')\"",
     "lint:eslint": "eslint src/**/*.*",
     "fix:eslint": "eslint --fix src/**/*.*",
     "lint:prettier": "prettier -c .",
@@ -33,10 +33,13 @@
   },
   "homepage": "https://github.com/basketry/ir#readme",
   "devDependencies": {
+    "@basketry/json-schema": "^0.2.0-alpha.4",
+    "@basketry/typescript": "^0.2.0-alpha.2",
     "@types/jest": "^27.4.0",
     "@types/node": "^17.0.10",
     "@typescript-eslint/eslint-plugin": "^5.8.1",
     "@typescript-eslint/parser": "^5.8.1",
+    "basketry": "^0.2.0-alpha.14",
     "eslint": "^8.5.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-import": "^2.25.3",
@@ -49,7 +52,6 @@
     "typescript": "^4.5.5"
   },
   "dependencies": {
-    "basketry": "^0.0.29",
-    "case": "^1.6.3"
+    "ajv": "^8.17.1"
   }
 }
