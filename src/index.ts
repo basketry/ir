@@ -1,2 +1,2 @@
-export * as generator from './generator';
-export * as parser from './parser';
+export * from './generated/types';
+export { validate } from './validator';
