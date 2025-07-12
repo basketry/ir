@@ -1003,6 +1003,7 @@ export type PrimitiveValue = {
   kind: 'PrimitiveValue';
   typeName: PrimitiveLiteral;
   isArray?: TrueLiteral;
+  isNullable?: TrueLiteral;
   constant?: PrimitiveValueConstant;
   default?: PrimitiveValueDefault;
   rules: ValidationRule[];
