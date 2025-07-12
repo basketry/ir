@@ -376,6 +376,7 @@
         "kind": { "type": "string", "const": "PrimitiveValue" },
         "typeName": { "$ref": "#/definitions/primitiveLiteral" },
         "isArray": { "$ref": "#/definitions/true" },
+        "isNullable": { "$ref": "#/definitions/true" },
         "constant": {
           "oneOf": [
             { "$ref": "#/definitions/string" },
