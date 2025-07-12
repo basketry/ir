@@ -1,6 +1,6 @@
 {
   "name": "@basketry/ir",
-  "version": "0.2.0-alpha.0",
+  "version": "0.2.0-alpha.1",
   "description": "Low-level Basketry IR components",
   "main": "./lib/index.js",
   "scripts": {
