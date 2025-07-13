@@ -295,6 +295,20 @@
         { "$ref": "#/definitions/discriminatedUnion" }
       ]
     },
+    "disjunctionKindLiteral": {
+      "type": "object",
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": { "type": "string", "const": "DisjunctionKindLiteral" },
+        "value": { "$ref": "#/definitions/disjunctionKind" },
+        "loc": { "$ref": "#/definitions/range" }
+      },
+      "additionalProperties": false
+    },
+    "disjunctionKind": {
+      "type": "string",
+      "enum": ["inclusive", "exclusive"]
+    },
     "simpleUnion": {
       "type": "object",
       "required": ["kind", "name", "members"],
@@ -311,6 +325,7 @@
           "items": { "$ref": "#/definitions/memberValue" },
           "minItems": 1
         },
+        "disjunction": { "$ref": "#/definitions/disjunctionKindLiteral" },
         "deprecated": { "$ref": "#/definitions/deprecated" },
         "loc": { "$ref": "#/definitions/range" },
         "meta": { "$ref": "#/definitions/meta" }

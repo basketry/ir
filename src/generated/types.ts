@@ -14,6 +14,8 @@
 
 export type ApiKeySchemeInValue = 'header' | 'query' | 'cookie';
 
+export type DisjunctionKind = 'inclusive' | 'exclusive';
+
 /** The format of an array in an HTTP request or response. */
 export type HttpArrayFormat = 'csv' | 'ssv' | 'tsv' | 'pipes' | 'multi';
 
@@ -244,6 +246,23 @@ export type DiscriminatedUnion = {
    */
   loc?: string;
   meta?: MetaValue[];
+};
+
+export type DisjunctionKindLiteral = {
+  kind: 'DisjunctionKindLiteral';
+  value: DisjunctionKind;
+
+  /**
+   * A range in the source document encoded as a string. This string is a
+   * semicolon-separated list of numbers and MUST be in one of the following formats:
+   * - Single point: `<row>;<col>;<offset>` (eg. `"4;12;88"`)
+   * - Single row: `<row>;<col1>;<col2>;<offset1>;<offset2>` (eg. `"4;12;21;88;97"`)
+   * - Multi row: `<row1>;<col1>;<row2>;<col2>;<offset1>;<offset2>` (eg.
+   * `"4;12;6;3;88;164"`)
+   *
+   * Both the `row` and `column` values are 1-based. The `offset` values are 0-based.
+   */
+  loc?: string;
 };
 
 export type Enum = {
@@ -1145,6 +1164,7 @@ export type SimpleUnion = {
   name: StringLiteral;
   description?: StringLiteral[];
   members: MemberValue[];
+  disjunction?: DisjunctionKindLiteral;
   deprecated?: TrueLiteral;
 
   /**
