@@ -2980,7 +2980,11 @@
           "typeName": { "kind": "StringLiteral", "value": "partB" },
           "rules": []
         }
-      ]
+      ],
+      "disjunction": {
+        "kind": "DisjunctionKindLiteral",
+        "value": "inclusive"
+      }
     },
     {
       "kind": "SimpleUnion",
@@ -2996,7 +3000,11 @@
           "typeName": { "kind": "StringLiteral", "value": "partB" },
           "rules": []
         }
-      ]
+      ],
+      "disjunction": {
+        "kind": "DisjunctionKindLiteral",
+        "value": "inclusive"
+      }
     },
     {
       "kind": "DiscriminatedUnion",
