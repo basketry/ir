@@ -1172,24 +1172,6 @@ export type SimpleUnion = {
   meta?: MetaValue[];
 };
 
-export type StringEnumRule = {
-  kind: 'ValidationRule';
-  id: 'StringEnum';
-  values: StringLiteral[];
-
-  /**
-   * A range in the source document encoded as a string. This string is a
-   * semicolon-separated list of numbers and MUST be in one of the following formats:
-   * - Single point: `<row>;<col>;<offset>` (eg. `"4;12;88"`)
-   * - Single row: `<row>;<col1>;<col2>;<offset1>;<offset2>` (eg. `"4;12;21;88;97"`)
-   * - Multi row: `<row1>;<col1>;<row2>;<col2>;<offset1>;<offset2>` (eg.
-   * `"4;12;6;3;88;164"`)
-   *
-   * Both the `row` and `column` values are 1-based. The `offset` values are 0-based.
-   */
-  loc?: string;
-};
-
 export type StringFormatRule = {
   kind: 'ValidationRule';
   id: 'StringFormat';
@@ -1427,7 +1409,6 @@ export type ValidationRule =
   | StringMinLengthRule
   | StringPatternRule
   | StringFormatRule
-  | StringEnumRule
   | NumberMultipleOfRule
   | NumberGtRule
   | NumberGteRule
@@ -1459,10 +1440,6 @@ export function isStringFormatRule(
   obj: ValidationRule,
 ): obj is StringFormatRule {
   return obj.id === 'StringFormat';
-}
-
-export function isStringEnumRule(obj: ValidationRule): obj is StringEnumRule {
-  return obj.id === 'StringEnum';
 }
 
 export function isNumberMultipleOfRule(
