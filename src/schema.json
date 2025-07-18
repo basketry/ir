@@ -392,6 +392,7 @@
         "typeName": { "$ref": "#/definitions/primitiveLiteral" },
         "isArray": { "$ref": "#/definitions/true" },
         "isNullable": { "$ref": "#/definitions/true" },
+        "isOptional": { "$ref": "#/definitions/true" },
         "constant": {
           "oneOf": [
             { "$ref": "#/definitions/string" },
@@ -424,6 +425,7 @@
           "$ref": "#/definitions/string"
         },
         "isArray": { "$ref": "#/definitions/true" },
+        "isOptional": { "$ref": "#/definitions/true" },
         "rules": {
           "type": "array",
           "items": { "$ref": "#/definitions/validationRule" }
@@ -952,7 +954,6 @@
       },
       "description": "A validation rule.",
       "oneOf": [
-        { "$ref": "#/definitions/requiredRule" },
         { "$ref": "#/definitions/constantRule" },
         { "$ref": "#/definitions/stringMaxLengthRule" },
         { "$ref": "#/definitions/stringMinLengthRule" },
@@ -968,19 +969,6 @@
         { "$ref": "#/definitions/arrayMinItemsRule" },
         { "$ref": "#/definitions/arrayUniqueItemsRule" }
       ]
-    },
-    "requiredRule": {
-      "title": "RequiredRule",
-      "type": "object",
-      "required": ["kind", "id"],
-      "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "Required"
-        }
-      },
-      "additionalProperties": false
     },
     "constantRule": {
       "title": "ConstantRule",
