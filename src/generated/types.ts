@@ -216,6 +216,7 @@ export type ComplexValue = {
   /** The name of a type, enum, or union defined in this Service. */
   typeName: StringLiteral;
   isArray?: TrueLiteral;
+  isOptional?: TrueLiteral;
   rules: ValidationRule[];
 };
 
@@ -1023,6 +1024,7 @@ export type PrimitiveValue = {
   typeName: PrimitiveLiteral;
   isArray?: TrueLiteral;
   isNullable?: TrueLiteral;
+  isOptional?: TrueLiteral;
   constant?: PrimitiveValueConstant;
   default?: PrimitiveValueDefault;
   rules: ValidationRule[];
@@ -1052,11 +1054,6 @@ export type Property = {
 export type Protocols = {
   kind: 'InterfaceProtocols';
   http?: HttpRoute[];
-};
-
-export type RequiredRule = {
-  kind: 'ValidationRule';
-  id: 'Required';
 };
 
 export type ReturnValue = {
@@ -1434,7 +1431,6 @@ export function isDiscriminatedUnion(obj: Union): obj is DiscriminatedUnion {
 
 /** A validation rule. */
 export type ValidationRule =
-  | RequiredRule
   | ConstantRule
   | StringMaxLengthRule
   | StringMinLengthRule
@@ -1449,10 +1445,6 @@ export type ValidationRule =
   | ArrayMaxItemsRule
   | ArrayMinItemsRule
   | ArrayUniqueItemsRule;
-
-export function isRequiredRule(obj: ValidationRule): obj is RequiredRule {
-  return obj.id === 'Required';
-}
 
 export function isConstantRule(obj: ValidationRule): obj is ConstantRule {
   return obj.id === 'Constant';
