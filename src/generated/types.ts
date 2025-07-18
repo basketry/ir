@@ -220,12 +220,6 @@ export type ComplexValue = {
   rules: ValidationRule[];
 };
 
-export type ConstantRule = {
-  kind: 'ValidationRule';
-  id: 'Constant';
-  value: ConstantRuleValue;
-};
-
 /** TODO: don't allow arrays, enums, or other unions in discriminated unions */
 export type DiscriminatedUnion = {
   kind: 'DiscriminatedUnion';
@@ -1324,8 +1318,6 @@ export type UntypedLiteral = {
   loc?: string;
 };
 
-export type ConstantRuleValue = StringLiteral | NumberLiteral | BooleanLiteral;
-
 export type MemberValue = PrimitiveValue | ComplexValue;
 
 export function isPrimitiveValue(obj: MemberValue): obj is PrimitiveValue {
@@ -1431,7 +1423,6 @@ export function isDiscriminatedUnion(obj: Union): obj is DiscriminatedUnion {
 
 /** A validation rule. */
 export type ValidationRule =
-  | ConstantRule
   | StringMaxLengthRule
   | StringMinLengthRule
   | StringPatternRule
@@ -1445,10 +1436,6 @@ export type ValidationRule =
   | ArrayMaxItemsRule
   | ArrayMinItemsRule
   | ArrayUniqueItemsRule;
-
-export function isConstantRule(obj: ValidationRule): obj is ConstantRule {
-  return obj.id === 'Constant';
-}
 
 export function isStringMaxLengthRule(
   obj: ValidationRule,
