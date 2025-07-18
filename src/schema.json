@@ -958,7 +958,6 @@
         { "$ref": "#/definitions/stringMinLengthRule" },
         { "$ref": "#/definitions/stringPatternRule" },
         { "$ref": "#/definitions/stringFormatRule" },
-        { "$ref": "#/definitions/stringEnumRule" },
         { "$ref": "#/definitions/numberMultipleOfRule" },
         { "$ref": "#/definitions/numberGtRule" },
         { "$ref": "#/definitions/numberGteRule" },
@@ -1025,25 +1024,6 @@
           "const": "StringFormat"
         },
         "format": { "$ref": "#/definitions/nonEmptyString" },
-        "loc": { "$ref": "#/definitions/range" }
-      },
-      "additionalProperties": false
-    },
-    "stringEnumRule": {
-      "title": "StringEnumRule",
-      "type": "object",
-      "required": ["kind", "id", "values"],
-      "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "StringEnum"
-        },
-        "values": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/string" },
-          "minItems": 1
-        },
         "loc": { "$ref": "#/definitions/range" }
       },
       "additionalProperties": false
