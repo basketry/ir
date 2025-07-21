@@ -425,6 +425,7 @@
           "$ref": "#/definitions/string"
         },
         "isArray": { "$ref": "#/definitions/true" },
+        "isNullable": { "$ref": "#/definitions/true" },
         "isOptional": { "$ref": "#/definitions/true" },
         "rules": {
           "type": "array",

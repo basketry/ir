@@ -216,6 +216,7 @@ export type ComplexValue = {
   /** The name of a type, enum, or union defined in this Service. */
   typeName: StringLiteral;
   isArray?: TrueLiteral;
+  isNullable?: TrueLiteral;
   isOptional?: TrueLiteral;
   rules: ValidationRule[];
 };
