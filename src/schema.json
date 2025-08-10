@@ -33,7 +33,7 @@
     },
     "sourcePaths": {
       "type": "array",
-      "description": "The path to the original source document for this service. All locations in the Intermediate Representation refer to ranges within this source document.",
+      "description": "An array of paths to the original source documents for this service. These paths are relative to the directory of the config file that produced the IR. All locations in the Intermediate Representation refer to ranges within these source documents.",
       "items": { "type": "string" }
     },
     "interfaces": {
@@ -58,8 +58,14 @@
       "type": "array",
       "items": { "$ref": "#/definitions/union" }
     },
-    "loc": { "$ref": "#/definitions/range" },
-    "meta": { "$ref": "#/definitions/meta" }
+    "loc": {
+      "description": "The encoded location of the service in the source document(s).",
+      "$ref": "#/definitions/range"
+    },
+    "meta": {
+      "description": "An array of metadata values for the service.",
+      "$ref": "#/definitions/meta"
+    }
   },
   "additionalProperties": false,
   "definitions": {
@@ -71,18 +77,26 @@
     },
     "metaValue": {
       "type": "object",
+      "description": "Metadata in the form of a key-value pair.",
       "required": ["kind", "key", "value"],
       "properties": {
         "kind": { "type": "string", "const": "MetaValue" },
-        "key": { "$ref": "#/definitions/string" },
+        "key": {
+          "description": "The key of the metadata value.",
+          "$ref": "#/definitions/string"
+        },
         "value": {
+          "description": "An untyped literal value. Implementations MUST NOT assume any particular type for this value.",
           "type": "object",
           "required": ["kind", "value"],
           "title": "UntypedLiteral",
           "properties": {
             "kind": { "type": "string", "const": "UntypedLiteral" },
             "value": {},
-            "loc": { "type": "string" }
+            "loc": {
+              "description": "The encoded location of the untyped literal value in the source document(s).",
+              "type": "string"
+            }
           }
         }
       }
@@ -90,197 +104,351 @@
 
     "interface": {
       "type": "object",
+      "description": "An Interface defines a cohesive set of related methods that collectively represent a functional contract within a service. Interfaces act as the primary grouping mechanism for operations and are protocol-agnostic by default. They provide a stable, language-neutral abstraction of service capabilities, ensuring that tooling can target a wide range of programming languages and frameworks without losing semantic meaning.",
       "required": ["kind", "name", "methods"],
       "properties": {
         "kind": { "type": "string", "const": "Interface" },
-        "name": { "$ref": "#/definitions/string" },
+        "name": {
+          "$ref": "#/definitions/string",
+          "description": "The name of the interface. This name MUST be unique within the Service. This value MAY be represented in any casing. Generators MUST NOT assume any particular casing for this value and SHOULD represent it in a language-idiomatic way."
+        },
         "description": {
+          "description": "An array of strings that describe the interface. Each item in the array SHOULD be considered a separate paragraph. These values MAY include Markdown formatting.",
           "type": "array",
           "items": { "$ref": "#/definitions/string" }
         },
         "methods": {
+          "description": "An array of methods defined by this interface.",
           "type": "array",
           "items": { "$ref": "#/definitions/method" }
         },
-        "protocols": { "$ref": "#/definitions/protocols" },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
-        "meta": { "$ref": "#/definitions/meta" }
+        "protocols": {
+          "description": "Any protocol-specific information about the interface. This information is not part of the core interface structure and definition, but MAY be used by tooling to generate code for specific protocols.",
+          "$ref": "#/definitions/protocols"
+        },
+        "deprecated": {
+          "description": "A boolean value that indicates whether the interface is deprecated.",
+          "$ref": "#/definitions/true"
+        },
+        "meta": {
+          "description": "An array of metadata values for the interface.",
+          "$ref": "#/definitions/meta"
+        }
       },
       "additionalProperties": false
     },
     "method": {
       "type": "object",
+      "description": "A Method defines a single operation that can be performed on a service. Methods are the primary means of interacting with a service and are associated with a specific interface. They define the input parameters, output values, and any security requirements for executing the operation.",
       "required": ["kind", "name", "security", "parameters"],
       "properties": {
         "kind": { "type": "string", "const": "Method" },
-        "name": { "$ref": "#/definitions/string" },
-        "security": {
-          "type": "array",
-          "items": { "$ref": "#/definitions/securityOption" }
+        "name": {
+          "description": "The name of the method. This name MUST be unique within the Service. This value MAY be represented in any casing. Generators MUST NOT assume any particular casing for this value and SHOULD represent it in a language-idiomatic way.",
+          "$ref": "#/definitions/string"
         },
         "description": {
+          "description": "An array of strings that describe the interface. Each item in the array SHOULD be considered a separate paragraph. These values MAY include Markdown formatting.",
           "type": "array",
           "items": { "$ref": "#/definitions/string" }
         },
         "parameters": {
+          "description": "An array of parameters that are required for the method. Each parameter defines its own name, value definition, and optional constraints.",
           "type": "array",
           "items": { "$ref": "#/definitions/parameter" }
         },
-        "returns": { "$ref": "#/definitions/returnValue" },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
-        "loc": { "$ref": "#/definitions/range" },
-        "meta": { "$ref": "#/definitions/meta" }
+        "security": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/securityOption" }
+        },
+        "returns": {
+          "description": "The value that is returned by the method. This value is defined by the method’s return type.",
+          "$ref": "#/definitions/returnValue"
+        },
+        "deprecated": {
+          "description": "A boolean value that indicates whether the method is deprecated.",
+          "$ref": "#/definitions/true"
+        },
+        "loc": {
+          "description": "The encoded location of the method in the source document(s).",
+          "$ref": "#/definitions/range"
+        },
+        "meta": {
+          "description": "An array of metadata values for the method.",
+          "$ref": "#/definitions/meta"
+        }
       },
       "additionalProperties": false
     },
     "parameter": {
       "type": "object",
+      "description": "A Parameter defines an input value accepted by a method. Parameters define the contract for the information a method caller MUST (or MAY) provide, ensuring consistent behavior across all implementations of the service.",
       "required": ["kind", "name", "value"],
       "properties": {
         "kind": { "type": "string", "const": "Parameter" },
-        "name": { "$ref": "#/definitions/string" },
+        "name": {
+          "description": "The name of the parameter. This name MUST be unique within the method. This value MAY be represented in any casing. Generators MUST NOT assume any particular casing for this value and SHOULD represent it in a language-idiomatic way.",
+          "$ref": "#/definitions/string"
+        },
         "description": {
+          "description": "An array of strings that describe the parameter. Each item in the array SHOULD be considered a separate paragraph. These values MAY include Markdown formatting.",
           "type": "array",
           "items": { "$ref": "#/definitions/string" }
         },
-        "value": { "$ref": "#/definitions/memberValue" },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
-        "loc": { "$ref": "#/definitions/range" },
-        "meta": { "$ref": "#/definitions/meta" }
+        "value": {
+          "description": "The value of the parameter. This value defines the data shape and constraints for the parameter.",
+          "$ref": "#/definitions/memberValue"
+        },
+        "deprecated": {
+          "description": "A boolean value that indicates whether the parameter is deprecated.",
+          "$ref": "#/definitions/true"
+        },
+        "loc": {
+          "description": "The encoded location of the parameter in the source document(s).",
+          "$ref": "#/definitions/range"
+        },
+        "meta": {
+          "description": "An array of metadata values for the parameter.",
+          "$ref": "#/definitions/meta"
+        }
       },
       "additionalProperties": false
     },
     "returnValue": {
       "type": "object",
-      "allOf": [
-        {
-          "type": "object",
-          "required": ["kind", "value"],
-          "properties": {
-            "kind": { "type": "string", "const": "ReturnValue" },
-            "loc": { "$ref": "#/definitions/range" },
-            "meta": { "$ref": "#/definitions/meta" },
-            "value": { "$ref": "#/definitions/memberValue" }
-          }
+      "description": "A ReturnValue defines the output produced by a method, specifying the value’s data shape and constraints.",
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": { "type": "string", "const": "ReturnValue" },
+        "value": {
+          "description": "The value that is returned by the method. This value defines the data shape and constraints for the return value.",
+          "$ref": "#/definitions/memberValue"
+        },
+        "loc": {
+          "description": "The encoded location of the return value in the source document(s).",
+          "$ref": "#/definitions/range"
+        },
+        "meta": {
+          "description": "An array of metadata values for the return value.",
+          "$ref": "#/definitions/meta"
         }
-      ]
+      }
     },
 
     "type": {
       "type": "object",
+      "description": "A Type defines the structure of a data shape used within a service. Types are reusable, named contracts that describe how data is organized and validated across interfaces and methods. They provide a stable, language-neutral representation of complex data models, allowing tooling to interact iwth strongly typed artifacts in any target language while preserving the semantics and constraints defined in the original service description",
       "required": ["kind", "name", "properties", "rules"],
       "properties": {
         "kind": { "type": "string", "const": "Type" },
-        "name": { "$ref": "#/definitions/string" },
+        "name": {
+          "description": "The name of the type. This name MUST be unique within the Service across all other types, enums, and unions. This value MAY be represented in any casing. Generators MUST NOT assume any particular casing for this value and SHOULD represent it in a language-idiomatic way.",
+          "$ref": "#/definitions/string"
+        },
         "description": {
+          "description": "An array of strings that describe the type. Each item in the array SHOULD be considered a separate paragraph. These values MAY include Markdown formatting.",
           "type": "array",
           "items": { "$ref": "#/definitions/string" }
         },
-        "deprecated": { "$ref": "#/definitions/true" },
+        "deprecated": {
+          "description": "A boolean value that indicates whether the type is deprecated.",
+          "$ref": "#/definitions/true"
+        },
         "properties": {
+          "description": "An array of named properties that make up the structure of the type. Each property has its own name, value definition, and optional constraints. Properties SHOULD be used when the type’s structure is defined by a fixed set of known field names.",
           "type": "array",
           "items": { "$ref": "#/definitions/property" }
         },
-        "mapProperties": { "$ref": "#/definitions/mapProperties" },
+        "mapProperties": {
+          "description": "An optional set of allowed key and value shapes when the type represents a dynamic map or dictionary rather than a fixed set of fields. Map properties SHOULD be used when the type’s structure is defined by arbitrary keys whose values share a common schema.",
+          "$ref": "#/definitions/mapProperties"
+        },
         "rules": {
+          "description": "A set of constraints that apply to the overall structure of the type. These rules are specific to the type itself and are distinct from rules that apply to property definitions.",
           "type": "array",
           "items": { "$ref": "#/definitions/objectValidationRule" }
         },
-        "loc": { "$ref": "#/definitions/range" },
-        "meta": { "$ref": "#/definitions/meta" }
+        "loc": {
+          "description": "The encoded location of the type in the source document(s).",
+          "$ref": "#/definitions/range"
+        },
+        "meta": {
+          "description": "An array of metadata values for the type.",
+          "$ref": "#/definitions/meta"
+        }
       },
       "additionalProperties": false
     },
     "property": {
       "type": "object",
+      "description": "A Property defines a named field within a type, representing a fixed part of that type’s structure. Each property specifies the field’s name, its data shape, and optional descriptive context. Properties are used when the set of field names is known in advance and does not vary between instances of the type.",
       "required": ["kind", "name", "value"],
       "properties": {
         "kind": { "type": "string", "const": "Property" },
-        "name": { "$ref": "#/definitions/string" },
+        "name": {
+          "description": "The name of the property. This name MUST be unique within a type. This value MAY be represented in any casing. Generators MUST NOT assume any particular casing for this value and SHOULD represent it in a language-idiomatic way.",
+          "$ref": "#/definitions/string"
+        },
         "description": {
+          "description": "An array of strings that describe the property. Each item in the array SHOULD be considered a separate paragraph. These values MAY include Markdown formatting.",
           "type": "array",
           "items": { "$ref": "#/definitions/string" }
         },
-        "value": { "$ref": "#/definitions/memberValue" },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
-        "loc": { "$ref": "#/definitions/range" },
-        "meta": { "$ref": "#/definitions/meta" }
+        "value": {
+          "description": "The value of the property. This value defines the data shape and constraints for the property.",
+          "$ref": "#/definitions/memberValue"
+        },
+        "deprecated": {
+          "description": "A boolean value that indicates whether the property is deprecated.",
+          "$ref": "#/definitions/true"
+        },
+        "loc": {
+          "description": "The encoded location of the property in the source document(s).",
+          "$ref": "#/definitions/range"
+        },
+        "meta": {
+          "description": "An array of metadata values for the property.",
+          "$ref": "#/definitions/meta"
+        }
       },
       "additionalProperties": false
     },
     "mapProperties": {
       "type": "object",
+      "description": "Map properties define the allowed shape for values associated with dynamically named keys in a type. They are used when the set of field names is not known in advance, allowing instances of the type to contain any number of keys that conform to a shared schema. Unlike properties, which represent explicitly named fields that are the same for all instances of a type, map properties describe rules for dynamically named fields that may vary between instances.",
       "required": ["kind", "key", "requiredKeys", "value"],
       "properties": {
         "kind": { "type": "string", "const": "MapProperties" },
-        "key": { "$ref": "#/definitions/mapKey" },
+        "key": {
+          "description": "The shape of the keys that are allowed in the map. This value defines the data shape and constraints for the map keys.",
+          "$ref": "#/definitions/mapKey"
+        },
         "requiredKeys": {
+          "description": "An array of key names that MUST be present in every instance of the map. Each entry specifies a required key that MUST conform to the map’s value definition. The array MAY be empty.",
           "type": "array",
           "items": { "$ref": "#/definitions/string" }
         },
-        "value": { "$ref": "#/definitions/mapValue" },
-        "loc": { "$ref": "#/definitions/range" },
-        "meta": { "$ref": "#/definitions/meta" }
+        "value": {
+          "description": "The shape of the values that are allowed in the map. This value defines the data shape and constraints for the map values.",
+          "$ref": "#/definitions/mapValue"
+        },
+        "loc": {
+          "description": "The encoded location of the map properties in the source document(s).",
+          "$ref": "#/definitions/range"
+        },
+        "meta": {
+          "description": "An array of metadata values for the map properties.",
+          "$ref": "#/definitions/meta"
+        }
       },
       "additionalProperties": false
     },
     "mapKey": {
       "type": "object",
+      "description": "Defines the allowed shape and constraints for keys in Map Properties.",
       "required": ["kind", "value"],
       "properties": {
         "kind": { "type": "string", "const": "MapKey" },
-        "value": { "$ref": "#/definitions/memberValue" },
-        "loc": { "$ref": "#/definitions/range" },
-        "meta": { "$ref": "#/definitions/meta" }
+        "value": {
+          "description": "The type definition for the map’s keys, which MAY be either a primitive or complex value.",
+          "$ref": "#/definitions/memberValue"
+        },
+        "loc": {
+          "description": "The encoded location of the map key in the source document(s).",
+          "$ref": "#/definitions/range"
+        },
+        "meta": {
+          "description": "An array of metadata values for the map key.",
+          "$ref": "#/definitions/meta"
+        }
       },
       "additionalProperties": false
     },
     "mapValue": {
       "type": "object",
+      "description": "Defines the allowed shape and constraints for values in Map Properties.",
       "required": ["kind", "value"],
       "properties": {
         "kind": { "type": "string", "const": "MapValue" },
-        "value": { "$ref": "#/definitions/memberValue" },
-        "loc": { "$ref": "#/definitions/range" },
-        "meta": { "$ref": "#/definitions/meta" }
+        "value": {
+          "description": "The type definition for the map’s values, which MAY be either a primitive or complex value.",
+          "$ref": "#/definitions/memberValue"
+        },
+        "loc": {
+          "description": "The encoded location of the map key in the source document(s).",
+          "$ref": "#/definitions/range"
+        },
+        "meta": {
+          "description": "An array of metadata values for the map key.",
+          "$ref": "#/definitions/meta"
+        }
       },
       "additionalProperties": false
     },
 
     "enum": {
       "type": "object",
+      "description": "An Enum defines a named set of constant values that represent all valid options for a particular member value.",
       "required": ["kind", "name", "members"],
       "properties": {
         "kind": { "type": "string", "const": "Enum" },
-        "name": { "$ref": "#/definitions/string" },
+        "name": {
+          "description": "The name of the enum. This name MUST be unique within the Service across all other types, enums, and unions. This value MAY be represented in any casing. Generators MUST NOT assume any particular casing for this value and SHOULD represent it in a language-idiomatic way.",
+          "$ref": "#/definitions/string"
+        },
         "description": {
+          "description": "An array of strings that describe the enum. Each item in the array SHOULD be considered a separate paragraph. These values MAY include Markdown formatting.",
           "type": "array",
           "items": { "$ref": "#/definitions/string" }
         },
         "members": {
           "type": "array",
+          "description": "An array of the constant values that make up the enum. Each member defines a single allowed value along with its optional description.",
           "items": { "$ref": "#/definitions/enumMember" },
           "minItems": 1
         },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
-        "loc": { "$ref": "#/definitions/range" },
-        "meta": { "$ref": "#/definitions/meta" }
+        "deprecated": {
+          "description": "A boolean value that indicates whether the enum is deprecated.",
+          "$ref": "#/definitions/true"
+        },
+        "loc": {
+          "description": "The encoded location of the enum in the source document(s).",
+          "$ref": "#/definitions/range"
+        },
+        "meta": {
+          "description": "An array of metadata values for the enum.",
+          "$ref": "#/definitions/meta"
+        }
       },
       "additionalProperties": false
     },
     "enumMember": {
       "type": "object",
+      "description": "Represents a single constant value within an enum.",
       "required": ["kind", "content"],
       "properties": {
         "kind": { "type": "string", "const": "EnumMember" },
-        "content": { "$ref": "#/definitions/string" },
+        "content": {
+          "description": "The constant value that represents the enum member. This value MUST be unique within the enum.",
+          "$ref": "#/definitions/string"
+        },
         "description": {
+          "description": "An array of strings that describe the enum member. Each item in the array SHOULD be considered a separate paragraph. These values MAY include Markdown formatting.",
           "type": "array",
           "items": { "$ref": "#/definitions/string" }
         },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
-        "loc": { "$ref": "#/definitions/range" },
-        "meta": { "$ref": "#/definitions/meta" }
+        "deprecated": {
+          "description": "A boolean value that indicates whether the enum member is deprecated.",
+          "$ref": "#/definitions/true"
+        },
+        "loc": {
+          "description": "The encoded location of the enum member in the source document(s).",
+          "$ref": "#/definitions/range"
+        },
+        "meta": {
+          "description": "An array of metadata values for the enum member.",
+          "$ref": "#/definitions/meta"
+        }
       },
       "additionalProperties": false
     },
@@ -300,7 +468,10 @@
       "required": ["kind", "value"],
       "properties": {
         "kind": { "type": "string", "const": "DisjunctionKindLiteral" },
-        "value": { "$ref": "#/definitions/disjunctionKind" },
+        "value": {
+          "description": "In an inclusive disjunction, a value MUST fully match at least one union member and MAY also match others. In an exclusive disjunction, a value MUST fully match exactly one union member and MUST NOT match any others.",
+          "$ref": "#/definitions/disjunctionKind"
+        },
         "loc": { "$ref": "#/definitions/range" }
       },
       "additionalProperties": false
@@ -312,46 +483,80 @@
     "simpleUnion": {
       "type": "object",
       "required": ["kind", "name", "members"],
-      "description": "TODO: don't allow arrays in primitive unions",
+      "description": "A Simple Union defines a member value that may be one of several possible primitive or complex types, without any additional field to indicate which type is in use. Implementations must determine the actual type based on the value itself. Simple unions are typically used for cases where the set of possible types is small and easily distinguishable without an explicit discriminator.",
       "properties": {
         "kind": { "type": "string", "const": "SimpleUnion" },
-        "name": { "$ref": "#/definitions/string" },
+        "name": {
+          "description": "The name of the union. This name MUST be unique within the Service across all other types, enums, and unions. This value MAY be represented in any casing. Generators MUST NOT assume any particular casing for this value and SHOULD represent it in a language-idiomatic way.",
+          "$ref": "#/definitions/string"
+        },
         "description": {
           "type": "array",
+          "description": "An array of strings that describe the union. Each item in the array SHOULD be considered a separate paragraph. These values MAY include Markdown formatting.",
           "items": { "$ref": "#/definitions/string" }
         },
         "members": {
           "type": "array",
+          "description": "An array of the possible member values that make up the union.",
           "items": { "$ref": "#/definitions/memberValue" },
           "minItems": 1
         },
-        "disjunction": { "$ref": "#/definitions/disjunctionKindLiteral" },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
-        "loc": { "$ref": "#/definitions/range" },
-        "meta": { "$ref": "#/definitions/meta" }
+        "disjunction": {
+          "description": "Indicates whether the union’s members are inclusive or exclusive. In an inclusive disjunction, a value MUST fully match at least one member and MAY also match others. In an exclusive disjunction, a value MUST fully match exactly one member and MUST NOT match any others. If this value is not present, tooling SHOULD consider the union to be inclusive.",
+          "$ref": "#/definitions/disjunctionKindLiteral"
+        },
+        "deprecated": {
+          "description": "A boolean value that indicates whether the union is deprecated.",
+          "$ref": "#/definitions/true"
+        },
+        "loc": {
+          "description": "The encoded location of the union in the source document(s).",
+          "$ref": "#/definitions/range"
+        },
+        "meta": {
+          "description": "An array of metadata values for the union.",
+          "$ref": "#/definitions/meta"
+        }
       },
       "additionalProperties": false
     },
     "discriminatedUnion": {
       "type": "object",
       "required": ["kind", "name", "discriminator", "members"],
-      "description": "TODO: don't allow arrays, enums, or other unions in discriminated unions",
+      "description": "A Discriminated Union defines a member value that may be one of several possible object types, with an explicit discriminator property whose value identifies which type is present. This approach allows implementations to unambiguously determine the type at runtime without inspecting the full structure of the value. Discriminated unions are commonly used when member types share overlapping shapes or when reliable deserialization across languages and tools is required.",
       "properties": {
         "kind": { "type": "string", "const": "DiscriminatedUnion" },
-        "name": { "$ref": "#/definitions/string" },
+        "name": {
+          "description": "The name of the union. This name MUST be unique within the Service across all other types, enums, and unions. This value MAY be represented in any casing. Generators MUST NOT assume any particular casing for this value and SHOULD represent it in a language-idiomatic way.",
+          "$ref": "#/definitions/string"
+        },
         "description": {
           "type": "array",
+          "description": "An array of strings that describe the union. Each item in the array SHOULD be considered a separate paragraph. These values MAY include Markdown formatting.",
           "items": { "$ref": "#/definitions/string" }
         },
-        "discriminator": { "$ref": "#/definitions/string" },
+        "discriminator": {
+          "description": "The name of the discriminator property. This property MUST exist in all union member types and MUST use identical casing across all of them.",
+          "$ref": "#/definitions/string"
+        },
         "members": {
           "type": "array",
+          "description": "An array of the possible member values that make up the union.",
           "items": { "$ref": "#/definitions/complexValue" },
           "minItems": 1
         },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
-        "loc": { "$ref": "#/definitions/range" },
-        "meta": { "$ref": "#/definitions/meta" }
+        "deprecated": {
+          "description": "A boolean value that indicates whether the union is deprecated.",
+          "$ref": "#/definitions/true"
+        },
+        "loc": {
+          "description": "The encoded location of the union in the source document(s).",
+          "$ref": "#/definitions/range"
+        },
+        "meta": {
+          "description": "An array of metadata values for the union.",
+          "$ref": "#/definitions/meta"
+        }
       },
       "additionalProperties": false
     },
@@ -386,14 +591,28 @@
     },
     "primitiveValue": {
       "type": "object",
+      "description": "Represents a value whose type is one of the built-in primitives (such as string, number, boolean, or null). Unlike a complex value, a primitive value does not reference other types, enums, or unions—it directly describes a base data type.",
       "required": ["kind", "typeName", "rules"],
       "properties": {
         "kind": { "type": "string", "const": "PrimitiveValue" },
-        "typeName": { "$ref": "#/definitions/primitiveLiteral" },
-        "isArray": { "$ref": "#/definitions/true" },
-        "isNullable": { "$ref": "#/definitions/true" },
-        "isOptional": { "$ref": "#/definitions/true" },
+        "typeName": {
+          "description": "The name of the primitive type.",
+          "$ref": "#/definitions/primitiveLiteral"
+        },
+        "isArray": {
+          "description": "A boolean value that indicates whether the value is an array.",
+          "$ref": "#/definitions/true"
+        },
+        "isNullable": {
+          "description": "Indicates whether the value MAY explicitly be set to `null`. When `true`, the type definition allows `null` as a valid value in addition to what is specified by `typeName`. Implementations MAY interpret `null` according to the closest equivalent in the target language or platform. (This differs from `isOptional`, where the value is not required to appear at all in the data structure or message.)",
+          "$ref": "#/definitions/true"
+        },
+        "isOptional": {
+          "description": "Indicates whether the value MAY be omitted entirely. When `true`, the value is not required to appear in the data structure or message. (This differs from `isNullable`, where the value is present but MAY explicitly be `null`.) If this value is not present, tooling MUST consider the value to be required.",
+          "$ref": "#/definitions/true"
+        },
         "constant": {
+          "description": "A single, fixed allowed value. This value MUST be compatible with the type specified by `typeName`. When defined, this value is the only valid value for the field, and tooling or validation MUST reject any other value.",
           "oneOf": [
             { "$ref": "#/definitions/string" },
             { "$ref": "#/definitions/number" },
@@ -402,6 +621,7 @@
           ]
         },
         "default": {
+          "description": "A value to be assumed or applied when none is provided. This value MUST be compatible with the type specified by `typeName`. A default does not restrict other valid values—it simply acts as the initial value when the field is omitted",
           "oneOf": [
             { "$ref": "#/definitions/string" },
             { "$ref": "#/definitions/number" },
@@ -410,6 +630,7 @@
           ]
         },
         "rules": {
+          "description": "A set of constraints that apply to the value, such as limits on length, numeric range, or array size. These rules define additional validation beyond the basic type definition and are distinct from rules that apply to a containing type.",
           "type": "array",
           "items": { "$ref": "#/definitions/validationRule" }
         }
@@ -417,17 +638,28 @@
     },
     "complexValue": {
       "type": "object",
+      "description": "Represents a value whose type is defined elsewhere in the Service as a named type, enum, or union.",
       "required": ["kind", "typeName", "rules"],
       "properties": {
         "kind": { "type": "string", "const": "ComplexValue" },
         "typeName": {
-          "description": "The name of a type, enum, or union defined in this Service.",
+          "description": "The name of a type, enum, or union defined in this Service. The casing MUST match the casing of the referenced type, enum, or union definition exactly.",
           "$ref": "#/definitions/string"
         },
-        "isArray": { "$ref": "#/definitions/true" },
-        "isNullable": { "$ref": "#/definitions/true" },
-        "isOptional": { "$ref": "#/definitions/true" },
+        "isArray": {
+          "description": "A boolean value that indicates whether the value is an array.",
+          "$ref": "#/definitions/true"
+        },
+        "isNullable": {
+          "description": "Indicates whether the value MAY explicitly be set to `null`. When `true`, the type definition allows `null` as a valid value in addition to what is specified by `typeName`. Implementations MAY interpret `null` according to the closest equivalent in the target language or platform. (This differs from `isOptional`, where the value is not required to appear at all in the data structure or message.)",
+          "$ref": "#/definitions/true"
+        },
+        "isOptional": {
+          "description": "Indicates whether the value MAY be omitted entirely. When `true`, the value is not required to appear in the data structure or message. (This differs from `isNullable`, where the value is present but MAY explicitly be `null`.) If this value is not present, tooling MUST consider the value to be required.",
+          "$ref": "#/definitions/true"
+        },
         "rules": {
+          "description": "A set of constraints that apply to the value, such as limits on length, numeric range, or array size. These rules define additional validation beyond the basic type definition and are distinct from rules that apply to a containing type.",
           "type": "array",
           "items": { "$ref": "#/definitions/validationRule" }
         }
@@ -470,6 +702,7 @@
     },
     "httpStatusCodeLiteral": {
       "type": "object",
+      "description": "Represents an HTTP status code as it appears in the original source document.",
       "required": ["kind", "value"],
       "properties": {
         "kind": { "type": "string", "const": "HttpStatusCodeLiteral" },
@@ -481,9 +714,13 @@
     "httpVerbLiteral": {
       "type": "object",
       "required": ["kind", "value"],
+      "description": "Represents an HTTP verb string as it appears in the original source document.",
       "properties": {
         "kind": { "type": "string", "const": "HttpVerbLiteral" },
-        "value": { "$ref": "#/definitions/httpVerb" },
+        "value": {
+          "description": "The HTTP verb as a lowercase string. Generators MAY represent this value in a language- or platform-idiomatic casing.",
+          "$ref": "#/definitions/httpVerb"
+        },
         "loc": { "$ref": "#/definitions/range" }
       },
       "additionalProperties": false
@@ -494,6 +731,7 @@
     },
     "httpLocationLiteral": {
       "type": "object",
+      "description": "Represents the location of an HTTP parameter as it appears in the original source document.",
       "required": ["kind", "value"],
       "properties": {
         "kind": { "type": "string", "const": "HttpLocationLiteral" },
@@ -509,6 +747,7 @@
     },
     "httpArrayFormatLiteral": {
       "type": "object",
+      "description": "Represents the format of an array in an HTTP request or response as it appears in the original source document.",
       "required": ["kind", "value"],
       "properties": {
         "kind": { "type": "string", "const": "HttpArrayFormatLiteral" },
@@ -615,7 +854,7 @@
           },
           "additionalProperties": false
         },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
+        "deprecated": { "$ref": "#/definitions/true" },
         "name": { "$ref": "#/definitions/string" },
         "description": { "$ref": "#/definitions/string" },
         "loc": { "$ref": "#/definitions/range" },
@@ -640,7 +879,7 @@
           },
           "additionalProperties": false
         },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
+        "deprecated": { "$ref": "#/definitions/true" },
         "name": { "$ref": "#/definitions/string" },
         "description": {
           "type": "array",
@@ -678,7 +917,7 @@
           },
           "additionalProperties": false
         },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
+        "deprecated": { "$ref": "#/definitions/true" },
         "name": { "$ref": "#/definitions/string" },
         "description": {
           "type": "array",
@@ -718,7 +957,7 @@
           },
           "additionalProperties": false
         },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
+        "deprecated": { "$ref": "#/definitions/true" },
         "authorizationUrl": { "$ref": "#/definitions/string" },
         "refreshUrl": { "$ref": "#/definitions/string" },
         "scopes": {
@@ -744,7 +983,7 @@
           },
           "additionalProperties": false
         },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
+        "deprecated": { "$ref": "#/definitions/true" },
         "tokenUrl": { "$ref": "#/definitions/string" },
         "refreshUrl": { "$ref": "#/definitions/string" },
         "scopes": {
@@ -770,7 +1009,7 @@
           },
           "additionalProperties": false
         },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
+        "deprecated": { "$ref": "#/definitions/true" },
         "tokenUrl": { "$ref": "#/definitions/string" },
         "refreshUrl": { "$ref": "#/definitions/string" },
         "scopes": {
@@ -796,7 +1035,7 @@
           },
           "additionalProperties": false
         },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
+        "deprecated": { "$ref": "#/definitions/true" },
         "authorizationUrl": { "$ref": "#/definitions/string" },
         "tokenUrl": { "$ref": "#/definitions/string" },
         "refreshUrl": { "$ref": "#/definitions/string" },
@@ -819,7 +1058,7 @@
           "type": "array",
           "items": { "$ref": "#/definitions/string" }
         },
-        "deprecated": { "$ref": "#/definitions/deprecated" },
+        "deprecated": { "$ref": "#/definitions/true" },
         "loc": { "$ref": "#/definitions/range" },
         "meta": { "$ref": "#/definitions/meta" }
       },
@@ -830,7 +1069,7 @@
       "type": "object",
       "required": ["kind", "value"],
       "title": "StringLiteral",
-      "description": "A string literal",
+      "description": "Represents a string value exactly as it appears in the original source document.",
       "properties": {
         "kind": { "type": "string", "const": "StringLiteral" },
         "value": { "type": "string" },
@@ -845,7 +1084,7 @@
       "type": "object",
       "required": ["kind", "value"],
       "title": "IntegerLiteral",
-      "description": "An integer literal",
+      "description": "Represents an integer value exactly as it appears in the original source document.",
       "properties": {
         "kind": { "type": "string", "const": "IntegerLiteral" },
         "value": { "type": "integer" },
@@ -857,7 +1096,7 @@
       "type": "object",
       "required": ["kind", "value"],
       "title": "NumberLiteral",
-      "description": "A number literal",
+      "description": "Represents a numeric value exactly as it appears in the original source document.",
       "properties": {
         "kind": { "type": "string", "const": "NumberLiteral" },
         "value": { "type": "integer" },
@@ -869,7 +1108,7 @@
       "type": "object",
       "required": ["kind", "value"],
       "title": "BooleanLiteral",
-      "description": "A boolean literal",
+      "description": "Represents a boolean value exactly as it appears in the original source document.",
       "properties": {
         "kind": { "type": "string", "const": "BooleanLiteral" },
         "value": { "type": "boolean" },
@@ -881,7 +1120,7 @@
       "type": "object",
       "required": ["kind", "value"],
       "title": "NullLiteral",
-      "description": "A null literal",
+      "description": "Represents a null value exactly as it appears in the original source document.",
       "properties": {
         "kind": { "type": "string", "const": "NullLiteral" },
         "value": { "type": "null" },
@@ -893,7 +1132,7 @@
       "type": "object",
       "required": ["kind", "value"],
       "title": "TrueLiteral",
-      "description": "A boolean literal whose value is always true",
+      "description": "Represents a boolean `true` value exactly as it appears in the original source document.",
       "properties": {
         "kind": { "type": "string", "const": "TrueLiteral" },
         "value": { "type": "boolean", "const": true },
@@ -905,10 +1144,10 @@
       "type": "object",
       "required": ["kind", "value"],
       "title": "NonEmptyStringLiteral",
-      "description": "A string literal",
+      "description": "Represents a non-empty string value exactly as it appears in the original source document.",
       "properties": {
         "kind": { "type": "string", "const": "NonEmptyStringLiteral" },
-        "value": { "type": "string" },
+        "value": { "type": "string", "minLength": 1 },
         "loc": {
           "description": "The location of this in the doc.",
           "$ref": "#/definitions/range"
@@ -920,6 +1159,7 @@
       "type": "object",
       "required": ["kind", "value"],
       "title": "NonNegativeIntegerLiteral",
+      "description": "Represents a non-negative integer value exactly as it appears in the original source document.",
       "properties": {
         "kind": { "type": "string", "const": "NonNegativeIntegerLiteral" },
         "value": { "type": "integer", "minimum": 0, "multipleOf": 1 },
@@ -931,6 +1171,7 @@
       "type": "object",
       "required": ["kind", "value"],
       "title": "NonNegativeNumberLiteral",
+      "description": "Represents a non-negative numeric value exactly as it appears in the original source document.",
       "properties": {
         "kind": { "type": "string", "const": "NonNegativeNumberLiteral" },
         "value": { "type": "number", "minimum": 0 },
@@ -939,12 +1180,8 @@
       "additionalProperties": false
     },
 
-    "deprecated": {
-      "description": "A boolean value indicating that this item is deprecated.",
-      "$ref": "#/definitions/true"
-    },
     "range": {
-      "description": "A range in the source document encoded as a string. This string is a semicolon-separated list of numbers and MUST be in one of the following formats:\n- Single point: `<row>;<col>;<offset>` (eg. `\"4;12;88\"`)\n- Single row: `<row>;<col1>;<col2>;<offset1>;<offset2>` (eg. `\"4;12;21;88;97\"`)\n- Multi row: `<row1>;<col1>;<row2>;<col2>;<offset1>;<offset2>` (eg. `\"4;12;6;3;88;164\"`)\n\nBoth the `row` and `column` values are 1-based. The `offset` values are 0-based.",
+      "description": "The encoded location of this node in the source document(s).",
       "type": "string",
       "pattern": "^(\\d+:)((\\d+;){2}(\\d+)|(\\d+;){4}(\\d+)|(\\d+;){5}(\\d+))$"
     },
@@ -971,6 +1208,7 @@
     },
     "stringMaxLengthRule": {
       "title": "StringMaxLengthRule",
+      "description": "A validation rule that specifies the maximum length of a string.",
       "type": "object",
       "required": ["kind", "id", "length"],
       "properties": {
@@ -986,6 +1224,7 @@
     },
     "stringMinLengthRule": {
       "title": "StringMinLengthRule",
+      "description": "A validation rule that specifies the minimum length of a string.",
       "type": "object",
       "required": ["kind", "id", "length"],
       "properties": {
@@ -1001,6 +1240,7 @@
     },
     "stringPatternRule": {
       "title": "StringPatternRule",
+      "description": "A validation rule that specifies a regular expression pattern that a string MUST match.",
       "type": "object",
       "required": ["kind", "id", "pattern"],
       "properties": {
@@ -1016,6 +1256,7 @@
     },
     "stringFormatRule": {
       "title": "StringFormatRule",
+      "description": "A validation rule that specifies a format that a string SHOULD conform to. This rule is distinct from `StringPattern` because it allows for additional named formats beyond regular expressions. Implementations SHOULD interpret the format according to the closest equivalent in the target language or platform.",
       "type": "object",
       "required": ["kind", "id", "format"],
       "properties": {
@@ -1031,6 +1272,7 @@
     },
     "numberMultipleOfRule": {
       "title": "NumberMultipleOfRule",
+      "description": "A validation rule that specifies a multiple of a number.",
       "type": "object",
       "required": ["kind", "id", "value"],
       "properties": {
@@ -1046,6 +1288,7 @@
     },
     "numberGtRule": {
       "title": "NumberGtRule",
+      "description": "A validation rule that specifies a number that MUST be greater than a given value.",
       "type": "object",
       "required": ["kind", "id", "value"],
       "properties": {
@@ -1061,6 +1304,7 @@
     },
     "numberGteRule": {
       "title": "NumberGteRule",
+      "description": "A validation rule that specifies a number that MUST be greater than or equal to a given value.",
       "type": "object",
       "required": ["kind", "id", "value"],
       "properties": {
@@ -1076,6 +1320,7 @@
     },
     "numberLtRule": {
       "title": "NumberLtRule",
+      "description": "A validation rule that specifies a number that MUST be less than a given value.",
       "type": "object",
       "required": ["kind", "id", "value"],
       "properties": {
@@ -1091,6 +1336,7 @@
     },
     "numberLteRule": {
       "title": "NumberLteRule",
+      "description": "A validation rule that specifies a number that MUST be less than or equal to a given value.",
       "type": "object",
       "required": ["kind", "id", "value"],
       "properties": {
@@ -1106,6 +1352,7 @@
     },
     "arrayMaxItemsRule": {
       "title": "ArrayMaxItemsRule",
+      "description": "A validation rule that specifies the maximum number of items in an array.",
       "type": "object",
       "required": ["kind", "id", "max"],
       "properties": {
@@ -1121,6 +1368,7 @@
     },
     "arrayMinItemsRule": {
       "title": "ArrayMinItemsRule",
+      "description": "A validation rule that specifies the minimum number of items in an array.",
       "type": "object",
       "required": ["kind", "id", "min"],
       "properties": {
@@ -1136,6 +1384,7 @@
     },
     "arrayUniqueItemsRule": {
       "title": "ArrayUniqueItemsRule",
+      "description": "A validation rule that specifies that all items in an array MUST be unique.",
       "type": "object",
       "required": ["kind", "id", "required"],
       "properties": {
@@ -1164,6 +1413,7 @@
     },
     "objectMinPropertiesRule": {
       "title": "ObjectMinPropertiesRule",
+      "description": "A validation rule that specifies the minimum number of properties on an object. This rule MAY be ignored by tooling if the object type does not define any Map Properties.",
       "type": "object",
       "required": ["kind", "id", "min"],
       "properties": {
@@ -1179,6 +1429,7 @@
     },
     "objectMaxPropertiesRule": {
       "title": "ObjectMaxPropertiesRule",
+      "description": "A validation rule that specifies the maximum number of properties on an object. This rule MAY be ignored by tooling if the object type does not define any Map Properties.",
       "type": "object",
       "required": ["kind", "id", "max"],
       "properties": {
