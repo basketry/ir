@@ -1,73 +1,5 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "type": "object",
-  "title": "Service",
-  "description": "Intermediate Representation (IR) of a service. The Basketry Intermediate Representation (IR) defines a structured, machine-oriented format that abstracts over various Interface Definition Languages (IDLs) and Service Description Languages (SDLs). This standardized, language-agnostic schema allows tooling to consistently interpret the core attributes and behaviors of a service, independent of its underlying definition format.\n\nBasketry IR is optimized for automated workflows, enabling code generation, documentation, validation, and custom analysis through reusable components without requiring developers to manually interact with the raw representation. While a typical Basketry pipeline translates human-friendly specifications (such as OpenAPI) into this intermediate format, the IR serves as a foundational layer for building new generators, rules, and other automation tools.",
-  "required": [
-    "kind",
-    "basketry",
-    "title",
-    "majorVersion",
-    "sourcePaths",
-    "interfaces",
-    "types",
-    "enums",
-    "unions"
-  ],
-  "properties": {
-    "$schema": { "type": "string" },
-    "kind": { "type": "string", "const": "Service" },
-    "basketry": {
-      "description": "This string MUST be the version number of the Basketry Specification that the Intermediate Representation uses. The `basketry` field SHOULD be used by tooling to interpret the IR document. This is not related to the Service `majorVersion` string.",
-      "type": "string",
-      "const": "0.2"
-    },
-    "title": {
-      "description": "The title of the service",
-      "$ref": "#/definitions/string"
-    },
-
-    "majorVersion": {
-      "description": "The major version of the Service (which is distinct from the Basketry Specification version).",
-      "$ref": "#/definitions/integer"
-    },
-    "sourcePaths": {
-      "type": "array",
-      "description": "An array of paths to the original source documents for this service. These paths are relative to the directory of the config file that produced the IR. All locations in the Intermediate Representation refer to ranges within these source documents.",
-      "items": { "type": "string" }
-    },
-    "interfaces": {
-      "description": "An array of Interfaces defined in this Service.",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/interface"
-      }
-    },
-    "types": {
-      "description": "An array of Types defined in this Service.",
-      "type": "array",
-      "items": { "$ref": "#/definitions/type" }
-    },
-    "enums": {
-      "description": "An array of Enums defined in this Service.",
-      "type": "array",
-      "items": { "$ref": "#/definitions/enum" }
-    },
-    "unions": {
-      "description": "An array of Unions defined in this Service.",
-      "type": "array",
-      "items": { "$ref": "#/definitions/union" }
-    },
-    "loc": {
-      "description": "The encoded location of the service in the source document(s).",
-      "$ref": "#/definitions/range"
-    },
-    "meta": {
-      "description": "An array of metadata values for the service.",
-      "$ref": "#/definitions/meta"
-    }
-  },
-  "additionalProperties": false,
   "definitions": {
     "meta": {
       "type": "array",
@@ -98,6 +30,489 @@
               "type": "string"
             }
           }
+        }
+      }
+    },
+
+    "service": {
+      "type": "object",
+      "title": "Service",
+      "description": "The `Service` object is the root of a Basketry Intermediate Representation (IR) document. It defines the core attributes of an API service, including its name, version, source documents, and all types and interfaces it contains. The `Service` object provides a canonical, language-agnostic model of the service definition that plugins such as generators and rules can consume without requiring access to the original source files.",
+      "required": [
+        "kind",
+        "basketry",
+        "title",
+        "majorVersion",
+        "sourcePaths",
+        "interfaces",
+        "types",
+        "enums",
+        "unions"
+      ],
+      "properties": {
+        "$schema": { "type": "string" },
+        "kind": { "type": "string", "const": "Service" },
+        "basketry": {
+          "description": "This string MUST be the version number of the Basketry Specification that the Intermediate Representation uses. The `basketry` field SHOULD be used by tooling to interpret the IR document. This is not related to the Service `majorVersion` string.",
+          "type": "string",
+          "const": "0.2"
+        },
+        "title": {
+          "description": "The title of the service",
+          "$ref": "#/definitions/string"
+        },
+
+        "majorVersion": {
+          "description": "The major version of the Service (which is distinct from the Basketry Specification version).",
+          "$ref": "#/definitions/integer"
+        },
+        "sourcePaths": {
+          "type": "array",
+          "description": "An array of paths to the original source documents for this service. These paths are relative to the directory of the config file that produced the IR. All locations in the Intermediate Representation refer to ranges within these source documents.",
+          "items": { "type": "string" }
+        },
+        "interfaces": {
+          "description": "An array of Interfaces defined in this Service.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/interface"
+          }
+        },
+        "types": {
+          "description": "An array of Types defined in this Service.",
+          "type": "array",
+          "items": { "$ref": "#/definitions/type" }
+        },
+        "enums": {
+          "description": "An array of Enums defined in this Service.",
+          "type": "array",
+          "items": { "$ref": "#/definitions/enum" }
+        },
+        "unions": {
+          "description": "An array of Unions defined in this Service.",
+          "type": "array",
+          "items": { "$ref": "#/definitions/union" }
+        },
+        "loc": {
+          "description": "The encoded location of the service in the source document(s).",
+          "$ref": "#/definitions/encodedRange"
+        },
+        "meta": {
+          "description": "An array of metadata values for the service.",
+          "$ref": "#/definitions/meta"
+        }
+      },
+      "additionalProperties": false
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["error", "warning", "info"]
+    },
+    "violation": {
+      "type": "object",
+      "description": "A Violation represents a problem encountered during parsing or rule evaluation. It includes metadata to help developers and systems pinpoint and understand issues within the source document.",
+      "required": ["sourcePath", "range", "message", "severity", "code"],
+      "properties": {
+        "sourcePath": {
+          "description": "The path to the source document that contains the violation. This path is relative to the project directory.",
+          "type": "string"
+        },
+        "range": {
+          "description": "The range of the violation in the source document.",
+          "$ref": "#/definitions/range"
+        },
+        "message": {
+          "description": "A human-readable explanation of the violation, suitable for display in CLI output, logs, or developer tools.",
+          "type": "string"
+        },
+        "severity": {
+          "description": "Indicates the impact of the violation. Use `\"error\"` for blocking issues, `\"warning\"` for non-blocking recommendations, and `\"info\"` for helpful guidance.",
+          "$ref": "#/definitions/severity"
+        },
+        "code": {
+          "description": "A unique identifier for the type of violation. This value SHOULD be a short, machine-readable string that can be used to identify the violation.",
+          "type": "string"
+        },
+        "link": {
+          "description": "A URL that provides additional documentation or context for the violation. MUST be a valid URI if provided. Useful for pointing to rule definitions, spec references, or troubleshooting guides.",
+          "type": "string"
+        }
+      }
+    },
+    "range": {
+      "type": "object",
+      "description": "The `Range` object defines a span within a source document. A `Range` is the decoded representation of the `loc` property found in the `Service` IR and provides precise information about where a violation or element occurs in the source text.",
+      "required": ["start", "end"],
+      "properties": {
+        "start": {
+          "description": "The position of the first character in the range.",
+          "$ref": "#/definitions/position"
+        },
+        "end": {
+          "description": "The position of the last character in the range.",
+          "$ref": "#/definitions/position"
+        }
+      }
+    },
+    "position": {
+      "type": "object",
+      "description": "The `Position` object defines a single point in a source document.",
+      "required": ["line", "column", "offset"],
+      "properties": {
+        "line": {
+          "description": "The 1-based line number of the position. The first line in a document is `1`.",
+          "type": "integer"
+        },
+        "column": {
+          "description": "The 1-based column number of the position within the line. The first column is `1`.",
+          "type": "integer"
+        },
+        "offset": {
+          "description": "The 0-based character offset from the start of the document. The first character is `0`.",
+          "type": "integer"
+        }
+      }
+    },
+
+    "requestId": {
+      "description": "A request id",
+      "oneOf": [{ "type": "string" }, { "type": "number" }]
+    },
+    "errorResponse": {
+      "type": "object",
+      "description": "The `ErrorResponse` object defines the structure of a JSON-RPC response returned when a request fails. It adheres to the [JSON-RPC 2.0 specification](https://www.jsonrpc.org/specification) and conveys error information instead of a result.",
+      "required": ["jsonrpc", "id", "error"],
+      "properties": {
+        "jsonrpc": {
+          "type": "string",
+          "description": "The JSON-RPC protocol version.",
+          "const": "2.0"
+        },
+        "id": {
+          "description": "Echoes the ID of the corresponding request. Used by the caller to correlate responses. If the request could not be parsed, this value SHOULD be `null`.",
+          "oneOf": [
+            { "type": "string" },
+            { "type": "number" },
+            { "type": "null" }
+          ]
+        },
+        "error": {
+          "description": "The error object providing details about the failure.",
+          "$ref": "#/definitions/rpcError"
+        }
+      }
+    },
+    "rpcError": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "description": "A machine-readable error code that identifies the type of error. Codes SHOULD follow the [JSON-RPC 2.0 standard error codes](https://www.jsonrpc.org/specification#error_object) when applicable, but MAY include custom values for Basketry-specific conditions.",
+          "type": "integer"
+        },
+        "message": {
+          "description": "A short human-readable description of the error. The message SHOULD be limited to a concise single sentence.",
+          "type": "string"
+        },
+        "data": {
+          "description": "An optional value that contains additional information about the error. The structure of this value MAY be determined by the plugin."
+        }
+      }
+    },
+    "basketryContext": {
+      "type": "object",
+      "description": "The Basketry context provides metadata about the current Basketry execution environment. This context is useful for resolving relative paths, debugging plugin behavior, or adapting plugin behavior based on CLI invocation details.",
+      "required": ["configuration", "projectDirectory"],
+      "properties": {
+        "configPath": {
+          "description": "Absolute path to the Basketry configuration file that initiated this run.",
+          "type": "string"
+        },
+        "projectDirectory": {
+          "description": "Absolute path to the root of the Basketry project. All relative paths (e.g. source files, outputs) are resolved against this directory.",
+          "type": "string"
+        }
+      }
+    },
+
+    "parserContext": {
+      "type": "object",
+      "description": "The Parser context object provides the core input to the plugin's parser: the raw source file and its path. This context isolates the entrypoint file that should be parsed and serves as the root for resolving any references to additional files (if applicable).",
+      "required": ["sourcePath", "sourceContent"],
+      "properties": {
+        "sourcePath": {
+          "description": "The relative path to the entrypoint file, from the root of the project directory.",
+          "type": "string"
+        },
+        "sourceContent": {
+          "description": "The full text content of the entrypoint file.",
+          "type": "string"
+        }
+      }
+    },
+    "parseRequest": {
+      "type": "object",
+      "description": "The `ParseRequest` object defines the structure of a JSON-RPC request for invoking the `basketry.parse` method. This method is called by the Basketry CLI or orchestrator to initiate parsing of one or more input files by a plugin. It adheres to the [JSON-RPC 2.0 specification](https://www.jsonrpc.org/specification) and includes metadata and parameters needed to perform the parse operation.",
+      "required": ["jsonrpc", "id", "method", "params"],
+      "properties": {
+        "jsonrpc": {
+          "type": "string",
+          "description": "The JSON-RPC protocol version.",
+          "const": "2.0"
+        },
+        "id": {
+          "description": "A unique identifier for this request. The response from the plugin will include this same ID, allowing the caller to correlate requests and responses.",
+          "$ref": "#/definitions/requestId"
+        },
+        "method": {
+          "type": "string",
+          "description": "The name of the RPC method to invoke.",
+          "const": "basketry.parse"
+        },
+        "params": {
+          "description": "The parameters specific to the parse operation.",
+          "$ref": "#/definitions/parseParams"
+        }
+      }
+    },
+    "parseParams": {
+      "type": "object",
+      "description": "The input payload passed to a plugin’s `basketry.parse` method. This object contains both the raw content to be parsed and metadata about the execution environment. Plugin authors should use this object to extract all necessary information to perform the parse operation.",
+      "required": ["context", "basketry"],
+      "properties": {
+        "context": {
+          "description": "Contains the source text and its associated file path. This is the content the plugin is expected to parse.",
+          "$ref": "#/definitions/parserContext"
+        },
+        "basketry": {
+          "description": "Contains runtime metadata.",
+          "$ref": "#/definitions/basketryContext"
+        }
+      }
+    },
+    "parseResponse": {
+      "type": "object",
+      "description": "The Parse response object represents the response payload returned from a plugin’s `basketry.parse` method. It adheres to the [JSON-RPC 2.0 specification](https://www.jsonrpc.org/specification) and contains the result of the parsing operation including both the produced service definition and any violations encountered.",
+      "required": ["jsonrpc", "id", "result"],
+      "properties": {
+        "jsonrpc": {
+          "type": "string",
+          "description": "The JSON-RPC protocol version.",
+          "const": "2.0"
+        },
+        "id": {
+          "description": "Echoes the ID of the corresponding request. Used by the caller to correlate responses.",
+          "$ref": "#/definitions/requestId"
+        },
+        "result": {
+          "description": "The result of the parse operation, including a service definition (if successful) and a list of violations (if any).",
+          "$ref": "#/definitions/parseResult"
+        }
+      }
+    },
+    "parseResult": {
+      "type": "object",
+      "description": "The parse result object encapsulates the output of a parsing operation. This includes the intermediate representation (IR) of the parsed service and any violations reported during the parsing process.",
+      "required": ["violations"],
+      "properties": {
+        "service": {
+          "description": "The parsed intermediate representation of the service. This is the structured output that downstream Basketry components will consume. This field is typically `undefined` if parsing fails entirely",
+          "$ref": "#/definitions/service"
+        },
+        "violations": {
+          "type": "array",
+          "description": "A list of violations encountered during parsing. Even if parsing is successful, this array may include warnings or informational messages to aid in debugging or quality assurance. If no issues were found, this should be an empty array.",
+          "items": { "$ref": "#/definitions/violation" }
+        }
+      }
+    },
+
+    "ruleContext": {
+      "type": "object",
+      "description": "The `RuleContext` object provides the inputs that a rule evaluates during validation.",
+      "required": ["service"],
+      "properties": {
+        "service": {
+          "description": "The intermediate representation (IR) of the service, produced by a parser. This is the input that rules validate against.",
+          "$ref": "#/definitions/service"
+        },
+        "options": {
+          "description": "Rule-specific configuration values. The structure and semantics of this field are defined by the rule itself. If omitted, empty, or improperly structured, the rule MUST apply its default behavior"
+        }
+      }
+    },
+    "validateRequest": {
+      "type": "object",
+      "description": "The `ValidateRequest` object defines the structure of a JSON-RPC request for invoking the `basketry.validate` method. This method is called by the Basketry CLI or orchestrator to execute one or more rules against a parsed `Service`. It adheres to the [JSON-RPC 2.0 specification](https://www.jsonrpc.org/specification) and includes metadata and parameters needed to perform the validation operation.",
+      "required": ["jsonrpc", "id", "method", "params"],
+      "properties": {
+        "jsonrpc": {
+          "type": "string",
+          "description": "The JSON-RPC protocol version.",
+          "const": "2.0"
+        },
+        "id": {
+          "description": "A unique identifier for this request. The response from the plugin will include this same ID, allowing the caller to correlate requests and responses.",
+          "$ref": "#/definitions/requestId"
+        },
+        "method": {
+          "type": "string",
+          "description": "The name of the RPC method to invoke.",
+          "const": "basketry.validate"
+        },
+        "params": {
+          "description": "The parameters specific to the validate operation.",
+          "$ref": "#/definitions/validateParams"
+        }
+      }
+    },
+    "validateParams": {
+      "type": "object",
+      "description": "The `ValidateParams` object defines the input parameters passed to the `basketry.validate` method.",
+      "required": ["context", "basketry"],
+      "properties": {
+        "context": {
+          "description": "Contains the `Service` to be validated and any rule-specific options.",
+          "$ref": "#/definitions/ruleContext"
+        },
+        "basketry": {
+          "description": "Contains runtime metadata.",
+          "$ref": "#/definitions/basketryContext"
+        }
+      }
+    },
+    "validateResponse": {
+      "type": "object",
+      "description": "The `ValidateResponse` object represents the response payload returned from the `basketry.validate` method. It adheres to the [JSON-RPC 2.0 specification](https://www.jsonrpc.org/specification) and contains the result of executing a rule against a service definition.",
+      "required": ["jsonrpc", "id", "result"],
+      "properties": {
+        "jsonrpc": {
+          "type": "string",
+          "description": "The JSON-RPC protocol version.",
+          "const": "2.0"
+        },
+        "id": {
+          "description": "Echoes the ID of the corresponding request. Used by the caller to correlate responses.",
+          "$ref": "#/definitions/requestId"
+        },
+        "result": {
+          "description": "The outcome of the validation, including all violations produced by the rule.",
+          "$ref": "#/definitions/validateResult"
+        }
+      }
+    },
+    "validateResult": {
+      "type": "object",
+      "description": "The `ValidateResult` object encapsulates the outcome of a rule’s validation run.",
+      "required": ["violations"],
+      "properties": {
+        "violations": {
+          "type": "array",
+          "description": "A list of violations produced by the rule. If no violations are found, this array MUST be empty.",
+          "items": { "$ref": "#/definitions/violation" }
+        }
+      }
+    },
+
+    "file": {
+      "type": "object",
+      "description": "The `File` object represents a single file produced by a generator.",
+      "required": ["path", "contents"],
+      "properties": {
+        "path": {
+          "description": "The path to the file, relative to the project directory. This MUST include the file name and extension. The array form allows paths to be represented in a normalized, platform-independent manner (e.g., [\"src\", \"models\", \"user.ts\"]).",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "contents": {
+          "description": "The complete textual contents of the file. Generators MUST encode the entire file body as a UTF-8 string.",
+          "type": "string"
+        }
+      }
+    },
+    "generatorContext": {
+      "type": "object",
+      "description": "The `GeneratorContext` object provides the inputs required by a generator to produce output artifacts.",
+      "required": ["service"],
+      "properties": {
+        "service": {
+          "description": "The intermediate representation (IR) of the service, produced by a parser. This is the input used by the generator to create code, documentation, or other artifacts.",
+          "$ref": "#/definitions/service"
+        },
+        "options": {
+          "description": "Generator-specific configuration values. The structure and semantics of this field are defined by the generator itself. If omitted, empty, or improperly structured, the generator MUST apply its default behavior"
+        }
+      }
+    },
+    "generateRequest": {
+      "type": "object",
+      "description": "The `GenerateRequest` object defines the structure of a JSON-RPC request for invoking the `basketry.generate` method. This method is called by the Basketry CLI or orchestrator to execute one or more generators against a parsed `Service`. It adheres to the [JSON-RPC 2.0 specification](https://www.jsonrpc.org/specification) and includes metadata and parameters needed to perform the generation operation.",
+      "required": ["jsonrpc", "id", "method", "params"],
+      "properties": {
+        "jsonrpc": {
+          "type": "string",
+          "description": "The JSON-RPC protocol version.",
+          "const": "2.0"
+        },
+        "id": {
+          "description": "A unique identifier for this request. The response from the plugin will include this same ID, allowing the caller to correlate requests and responses.",
+          "$ref": "#/definitions/requestId"
+        },
+        "method": {
+          "type": "string",
+          "description": "The name of the RPC method to invoke.",
+          "const": "basketry.generate"
+        },
+        "params": {
+          "description": "The parameters specific to the generate operation.",
+          "$ref": "#/definitions/generateParams"
+        }
+      }
+    },
+    "generateParams": {
+      "type": "object",
+      "description": "The `GenerateParams` object defines the input parameters passed to the `basketry.generate` method. It provides the generator with the service definition to render.",
+      "required": ["context", "basketry"],
+      "properties": {
+        "context": {
+          "description": "Contains the parsed `Service` and generator-specific options. This is the primary input for code generation.",
+          "$ref": "#/definitions/generatorContext"
+        },
+        "basketry": {
+          "description": "Contains runtime metadata.",
+          "$ref": "#/definitions/basketryContext"
+        }
+      }
+    },
+    "generateResponse": {
+      "type": "object",
+      "description": "The `GenerateResponse` object represents the response payload returned from the `basketry.generate` method. It adheres to the [JSON-RPC 2.0 specification](https://www.jsonrpc.org/specification) and contains the files produced by the generator.",
+      "required": ["jsonrpc", "id", "result"],
+      "properties": {
+        "jsonrpc": {
+          "type": "string",
+          "description": "The JSON-RPC protocol version.",
+          "const": "2.0"
+        },
+        "id": {
+          "description": "Echoes the ID of the corresponding request. Used by the caller to correlate responses.",
+          "$ref": "#/definitions/requestId"
+        },
+        "result": {
+          "description": "The outcome of the generation operation, including all files produced.",
+          "$ref": "#/definitions/generateResult"
+        }
+      }
+    },
+    "generateResult": {
+      "type": "object",
+      "description": "The `GenerateResult` object encapsulates the output of a generator.",
+      "required": ["files"],
+      "properties": {
+        "files": {
+          "type": "array",
+          "description": "An array of files produced by the generator. If no files are generated, this array MUST be empty.",
+          "items": { "$ref": "#/definitions/file" }
         }
       }
     },
@@ -171,7 +586,7 @@
         },
         "loc": {
           "description": "The encoded location of the method in the source document(s).",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         },
         "meta": {
           "description": "An array of metadata values for the method.",
@@ -205,7 +620,7 @@
         },
         "loc": {
           "description": "The encoded location of the parameter in the source document(s).",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         },
         "meta": {
           "description": "An array of metadata values for the parameter.",
@@ -226,7 +641,7 @@
         },
         "loc": {
           "description": "The encoded location of the return value in the source document(s).",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         },
         "meta": {
           "description": "An array of metadata values for the return value.",
@@ -270,7 +685,7 @@
         },
         "loc": {
           "description": "The encoded location of the type in the source document(s).",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         },
         "meta": {
           "description": "An array of metadata values for the type.",
@@ -304,7 +719,7 @@
         },
         "loc": {
           "description": "The encoded location of the property in the source document(s).",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         },
         "meta": {
           "description": "An array of metadata values for the property.",
@@ -334,7 +749,7 @@
         },
         "loc": {
           "description": "The encoded location of the map properties in the source document(s).",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         },
         "meta": {
           "description": "An array of metadata values for the map properties.",
@@ -355,7 +770,7 @@
         },
         "loc": {
           "description": "The encoded location of the map key in the source document(s).",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         },
         "meta": {
           "description": "An array of metadata values for the map key.",
@@ -376,7 +791,7 @@
         },
         "loc": {
           "description": "The encoded location of the map key in the source document(s).",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         },
         "meta": {
           "description": "An array of metadata values for the map key.",
@@ -413,7 +828,7 @@
         },
         "loc": {
           "description": "The encoded location of the enum in the source document(s).",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         },
         "meta": {
           "description": "An array of metadata values for the enum.",
@@ -443,7 +858,7 @@
         },
         "loc": {
           "description": "The encoded location of the enum member in the source document(s).",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         },
         "meta": {
           "description": "An array of metadata values for the enum member.",
@@ -472,7 +887,7 @@
           "description": "In an inclusive disjunction, a value MUST fully match at least one union member and MAY also match others. In an exclusive disjunction, a value MUST fully match exactly one union member and MUST NOT match any others.",
           "$ref": "#/definitions/disjunctionKind"
         },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -511,7 +926,7 @@
         },
         "loc": {
           "description": "The encoded location of the union in the source document(s).",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         },
         "meta": {
           "description": "An array of metadata values for the union.",
@@ -551,7 +966,7 @@
         },
         "loc": {
           "description": "The encoded location of the union in the source document(s).",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         },
         "meta": {
           "description": "An array of metadata values for the union.",
@@ -585,7 +1000,7 @@
       "properties": {
         "kind": { "type": "string", "const": "PrimitiveLiteral" },
         "value": { "$ref": "#/definitions/primitive" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -707,7 +1122,7 @@
       "properties": {
         "kind": { "type": "string", "const": "HttpStatusCodeLiteral" },
         "value": { "type": "integer", "minimum": 100, "maximum": 599 },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -721,7 +1136,7 @@
           "description": "The HTTP verb as a lowercase string. Generators MAY represent this value in a language- or platform-idiomatic casing.",
           "$ref": "#/definitions/httpVerb"
         },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -736,7 +1151,7 @@
       "properties": {
         "kind": { "type": "string", "const": "HttpLocationLiteral" },
         "value": { "$ref": "#/definitions/httpLocation" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -752,7 +1167,7 @@
       "properties": {
         "kind": { "type": "string", "const": "HttpArrayFormatLiteral" },
         "value": { "$ref": "#/definitions/httpArrayFormat" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -766,7 +1181,7 @@
           "type": "array",
           "items": { "$ref": "#/definitions/httpMethod" }
         },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -798,7 +1213,7 @@
           "type": "array",
           "items": { "$ref": "#/definitions/string" }
         },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -810,7 +1225,7 @@
         "name": { "$ref": "#/definitions/string" },
         "location": { "$ref": "#/definitions/httpLocationLiteral" },
         "arrayFormat": { "$ref": "#/definitions/httpArrayFormatLiteral" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -824,7 +1239,7 @@
           "type": "array",
           "items": { "$ref": "#/definitions/securityScheme" }
         },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       }
     },
     "securityScheme": {
@@ -850,14 +1265,14 @@
               "type": "string",
               "const": "basic"
             },
-            "loc": { "$ref": "#/definitions/range" }
+            "loc": { "$ref": "#/definitions/encodedRange" }
           },
           "additionalProperties": false
         },
         "deprecated": { "$ref": "#/definitions/true" },
         "name": { "$ref": "#/definitions/string" },
         "description": { "$ref": "#/definitions/string" },
-        "loc": { "$ref": "#/definitions/range" },
+        "loc": { "$ref": "#/definitions/encodedRange" },
         "meta": { "$ref": "#/definitions/meta" }
       },
       "additionalProperties": false
@@ -875,7 +1290,7 @@
               "type": "string",
               "const": "apiKey"
             },
-            "loc": { "$ref": "#/definitions/range" }
+            "loc": { "$ref": "#/definitions/encodedRange" }
           },
           "additionalProperties": false
         },
@@ -894,11 +1309,11 @@
               "type": "string",
               "enum": ["header", "query", "cookie"]
             },
-            "loc": { "$ref": "#/definitions/range" }
+            "loc": { "$ref": "#/definitions/encodedRange" }
           },
           "additionalProperties": false
         },
-        "loc": { "$ref": "#/definitions/range" },
+        "loc": { "$ref": "#/definitions/encodedRange" },
         "meta": { "$ref": "#/definitions/meta" }
       },
       "additionalProperties": false
@@ -913,7 +1328,7 @@
           "required": ["value"],
           "properties": {
             "value": { "type": "string", "const": "oauth2" },
-            "loc": { "$ref": "#/definitions/range" }
+            "loc": { "$ref": "#/definitions/encodedRange" }
           },
           "additionalProperties": false
         },
@@ -927,7 +1342,7 @@
           "type": "array",
           "items": { "$ref": "#/definitions/oAuth2Flow" }
         },
-        "loc": { "$ref": "#/definitions/range" },
+        "loc": { "$ref": "#/definitions/encodedRange" },
         "meta": { "$ref": "#/definitions/meta" }
       },
       "additionalProperties": false
@@ -953,7 +1368,7 @@
           "required": ["value"],
           "properties": {
             "value": { "type": "string", "const": "implicit" },
-            "loc": { "$ref": "#/definitions/range" }
+            "loc": { "$ref": "#/definitions/encodedRange" }
           },
           "additionalProperties": false
         },
@@ -964,7 +1379,7 @@
           "type": "array",
           "items": { "$ref": "#/definitions/oAuth2Scope" }
         },
-        "loc": { "$ref": "#/definitions/range" },
+        "loc": { "$ref": "#/definitions/encodedRange" },
         "meta": { "$ref": "#/definitions/meta" }
       },
       "additionalProperties": false
@@ -979,7 +1394,7 @@
           "required": ["value"],
           "properties": {
             "value": { "type": "string", "const": "password" },
-            "loc": { "$ref": "#/definitions/range" }
+            "loc": { "$ref": "#/definitions/encodedRange" }
           },
           "additionalProperties": false
         },
@@ -990,7 +1405,7 @@
           "type": "array",
           "items": { "$ref": "#/definitions/oAuth2Scope" }
         },
-        "loc": { "$ref": "#/definitions/range" },
+        "loc": { "$ref": "#/definitions/encodedRange" },
         "meta": { "$ref": "#/definitions/meta" }
       },
       "additionalProperties": false
@@ -1005,7 +1420,7 @@
           "required": ["value"],
           "properties": {
             "value": { "type": "string", "const": "clientCredentials" },
-            "loc": { "$ref": "#/definitions/range" }
+            "loc": { "$ref": "#/definitions/encodedRange" }
           },
           "additionalProperties": false
         },
@@ -1016,7 +1431,7 @@
           "type": "array",
           "items": { "$ref": "#/definitions/oAuth2Scope" }
         },
-        "loc": { "$ref": "#/definitions/range" },
+        "loc": { "$ref": "#/definitions/encodedRange" },
         "meta": { "$ref": "#/definitions/meta" }
       },
       "additionalProperties": false
@@ -1031,7 +1446,7 @@
           "required": ["value"],
           "properties": {
             "value": { "type": "string", "const": "authorizationCode" },
-            "loc": { "$ref": "#/definitions/range" }
+            "loc": { "$ref": "#/definitions/encodedRange" }
           },
           "additionalProperties": false
         },
@@ -1043,7 +1458,7 @@
           "type": "array",
           "items": { "$ref": "#/definitions/oAuth2Scope" }
         },
-        "loc": { "$ref": "#/definitions/range" },
+        "loc": { "$ref": "#/definitions/encodedRange" },
         "meta": { "$ref": "#/definitions/meta" }
       },
       "additionalProperties": false
@@ -1059,7 +1474,7 @@
           "items": { "$ref": "#/definitions/string" }
         },
         "deprecated": { "$ref": "#/definitions/true" },
-        "loc": { "$ref": "#/definitions/range" },
+        "loc": { "$ref": "#/definitions/encodedRange" },
         "meta": { "$ref": "#/definitions/meta" }
       },
       "additionalProperties": false
@@ -1075,7 +1490,7 @@
         "value": { "type": "string" },
         "loc": {
           "description": "The location of this in the doc.",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         }
       },
       "additionalProperties": false
@@ -1088,7 +1503,7 @@
       "properties": {
         "kind": { "type": "string", "const": "IntegerLiteral" },
         "value": { "type": "integer" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1100,7 +1515,7 @@
       "properties": {
         "kind": { "type": "string", "const": "NumberLiteral" },
         "value": { "type": "integer" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1112,7 +1527,7 @@
       "properties": {
         "kind": { "type": "string", "const": "BooleanLiteral" },
         "value": { "type": "boolean" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1124,7 +1539,7 @@
       "properties": {
         "kind": { "type": "string", "const": "NullLiteral" },
         "value": { "type": "null" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1136,7 +1551,7 @@
       "properties": {
         "kind": { "type": "string", "const": "TrueLiteral" },
         "value": { "type": "boolean", "const": true },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1150,7 +1565,7 @@
         "value": { "type": "string", "minLength": 1 },
         "loc": {
           "description": "The location of this in the doc.",
-          "$ref": "#/definitions/range"
+          "$ref": "#/definitions/encodedRange"
         }
       },
       "additionalProperties": false
@@ -1163,7 +1578,7 @@
       "properties": {
         "kind": { "type": "string", "const": "NonNegativeIntegerLiteral" },
         "value": { "type": "integer", "minimum": 0, "multipleOf": 1 },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1175,12 +1590,12 @@
       "properties": {
         "kind": { "type": "string", "const": "NonNegativeNumberLiteral" },
         "value": { "type": "number", "minimum": 0 },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
 
-    "range": {
+    "encodedRange": {
       "description": "The encoded location of this node in the source document(s).",
       "type": "string",
       "pattern": "^(\\d+:)((\\d+;){2}(\\d+)|(\\d+;){4}(\\d+)|(\\d+;){5}(\\d+))$"
@@ -1218,7 +1633,7 @@
           "const": "StringMaxLength"
         },
         "length": { "$ref": "#/definitions/nonNegativeInteger" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1234,7 +1649,7 @@
           "const": "StringMinLength"
         },
         "length": { "$ref": "#/definitions/nonNegativeInteger" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1250,7 +1665,7 @@
           "const": "StringPattern"
         },
         "pattern": { "$ref": "#/definitions/nonEmptyString" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1266,7 +1681,7 @@
           "const": "StringFormat"
         },
         "format": { "$ref": "#/definitions/nonEmptyString" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1282,7 +1697,7 @@
           "const": "NumberMultipleOf"
         },
         "value": { "$ref": "#/definitions/nonNegativeNumber" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1298,7 +1713,7 @@
           "const": "NumberGT"
         },
         "value": { "$ref": "#/definitions/number" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1314,7 +1729,7 @@
           "const": "NumberGTE"
         },
         "value": { "$ref": "#/definitions/number" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1330,7 +1745,7 @@
           "const": "NumberLT"
         },
         "value": { "$ref": "#/definitions/number" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1346,7 +1761,7 @@
           "const": "NumberLTE"
         },
         "value": { "$ref": "#/definitions/number" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1362,7 +1777,7 @@
           "const": "ArrayMaxItems"
         },
         "max": { "$ref": "#/definitions/nonNegativeInteger" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1378,7 +1793,7 @@
           "const": "ArrayMinItems"
         },
         "min": { "$ref": "#/definitions/nonNegativeInteger" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1396,7 +1811,7 @@
         "required": {
           "type": "boolean"
         },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1423,7 +1838,7 @@
           "const": "ObjectMinProperties"
         },
         "min": { "$ref": "#/definitions/nonNegativeInteger" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1439,7 +1854,7 @@
           "const": "ObjectMaxProperties"
         },
         "max": { "$ref": "#/definitions/nonNegativeInteger" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
@@ -1454,7 +1869,7 @@
           "const": "ObjectAdditionalProperties"
         },
         "forbidden": { "$ref": "#/definitions/true" },
-        "loc": { "$ref": "#/definitions/range" }
+        "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     }
