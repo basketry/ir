@@ -10,7 +10,7 @@
     "fix": "run-s -s fix:*",
     "clean:output": "rimraf lib",
     "start": "node ./lib/index.js",
-    "prebuild": "run-s -s clean lint",
+    "prebuild": "basketry && run-s -s clean lint",
     "build": "tsc",
     "postbuild": "node -e \"require('fs').copyFileSync('src/schema.json','lib/schema.json')\"",
     "lint:eslint": "eslint src/**/*.*",
