@@ -55,7 +55,7 @@
         "basketry": {
           "description": "This string MUST be the version number of the Basketry Specification that the Intermediate Representation uses. The `basketry` field SHOULD be used by tooling to interpret the IR document. This is not related to the Service `majorVersion` string.",
           "type": "string",
-          "const": "0.2"
+          "const": "0.3"
         },
         "title": {
           "description": "The title of the service",

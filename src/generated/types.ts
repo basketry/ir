@@ -1258,7 +1258,7 @@ export type Service = {
    * to interpret the IR document. This is not related to the Service `majorVersion`
    * string.
    */
-  basketry: '0.2';
+  basketry: '0.3';
 
   /** The title of the service */
   title: StringLiteral;
