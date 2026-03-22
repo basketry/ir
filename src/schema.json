@@ -1616,160 +1616,124 @@
 
     "primitiveRule": {
       "discriminator": {
-        "propertyName": "id"
+        "propertyName": "kind"
       },
       "description": "A validation rule.",
       "oneOf": [
-        { "$ref": "#/definitions/stringMaxLengthRule" },
-        { "$ref": "#/definitions/stringMinLengthRule" },
-        { "$ref": "#/definitions/stringPatternRule" },
-        { "$ref": "#/definitions/stringFormatRule" },
-        { "$ref": "#/definitions/numberMultipleOfRule" },
-        { "$ref": "#/definitions/numberGtRule" },
-        { "$ref": "#/definitions/numberGteRule" },
-        { "$ref": "#/definitions/numberLtRule" },
-        { "$ref": "#/definitions/numberLteRule" }
+        { "$ref": "#/definitions/maxLengthRule" },
+        { "$ref": "#/definitions/minLengthRule" },
+        { "$ref": "#/definitions/patternRule" },
+        { "$ref": "#/definitions/formatRule" },
+        { "$ref": "#/definitions/multipleOfRule" },
+        { "$ref": "#/definitions/greaterThanRule" },
+        { "$ref": "#/definitions/greaterThanOrEqualRule" },
+        { "$ref": "#/definitions/lessThanRule" },
+        { "$ref": "#/definitions/lessThanOrEqualRule" }
       ]
     },
-    "stringMaxLengthRule": {
-      "title": "StringMaxLengthRule",
+    "maxLengthRule": {
+      "title": "MaxLengthRule",
       "description": "A validation rule that specifies the maximum length of a string.",
       "type": "object",
-      "required": ["kind", "id", "length"],
+      "required": ["kind", "length"],
       "properties": {
-        "kind": { "type": "string", "const": "PrimitiveRule" },
-        "id": {
-          "type": "string",
-          "const": "StringMaxLength"
-        },
+        "kind": { "type": "string", "const": "MaxLengthRule" },
         "length": { "$ref": "#/definitions/nonNegativeInteger" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "stringMinLengthRule": {
-      "title": "StringMinLengthRule",
+    "minLengthRule": {
+      "title": "MinLengthRule",
       "description": "A validation rule that specifies the minimum length of a string.",
       "type": "object",
-      "required": ["kind", "id", "length"],
+      "required": ["kind", "length"],
       "properties": {
-        "kind": { "type": "string", "const": "PrimitiveRule" },
-        "id": {
-          "type": "string",
-          "const": "StringMinLength"
-        },
+        "kind": { "type": "string", "const": "MinLengthRule" },
         "length": { "$ref": "#/definitions/nonNegativeInteger" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "stringPatternRule": {
-      "title": "StringPatternRule",
+    "patternRule": {
+      "title": "PatternRule",
       "description": "A validation rule that specifies a regular expression pattern that a string MUST match.",
       "type": "object",
-      "required": ["kind", "id", "pattern"],
+      "required": ["kind", "pattern"],
       "properties": {
-        "kind": { "type": "string", "const": "PrimitiveRule" },
-        "id": {
-          "type": "string",
-          "const": "StringPattern"
-        },
+        "kind": { "type": "string", "const": "PatternRule" },
         "pattern": { "$ref": "#/definitions/nonEmptyString" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "stringFormatRule": {
-      "title": "StringFormatRule",
-      "description": "A validation rule that specifies a format that a string SHOULD conform to. This rule is distinct from `StringPattern` because it allows for additional named formats beyond regular expressions. Implementations SHOULD interpret the format according to the closest equivalent in the target language or platform.",
+    "formatRule": {
+      "title": "FormatRule",
+      "description": "A validation rule that specifies a format that a string SHOULD conform to. This rule is distinct from `PatternRule` because it allows for additional named formats beyond regular expressions. Implementations SHOULD interpret the format according to the closest equivalent in the target language or platform.",
       "type": "object",
-      "required": ["kind", "id", "format"],
+      "required": ["kind", "format"],
       "properties": {
-        "kind": { "type": "string", "const": "PrimitiveRule" },
-        "id": {
-          "type": "string",
-          "const": "StringFormat"
-        },
+        "kind": { "type": "string", "const": "FormatRule" },
         "format": { "$ref": "#/definitions/nonEmptyString" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "numberMultipleOfRule": {
-      "title": "NumberMultipleOfRule",
+    "multipleOfRule": {
+      "title": "MultipleOfRule",
       "description": "A validation rule that specifies a multiple of a number.",
       "type": "object",
-      "required": ["kind", "id", "value"],
+      "required": ["kind", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "PrimitiveRule" },
-        "id": {
-          "type": "string",
-          "const": "NumberMultipleOf"
-        },
+        "kind": { "type": "string", "const": "MultipleOfRule" },
         "value": { "$ref": "#/definitions/nonNegativeNumber" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "numberGtRule": {
-      "title": "NumberGtRule",
+    "greaterThanRule": {
+      "title": "GreaterThanRule",
       "description": "A validation rule that specifies a number that MUST be greater than a given value.",
       "type": "object",
-      "required": ["kind", "id", "value"],
+      "required": ["kind", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "PrimitiveRule" },
-        "id": {
-          "type": "string",
-          "const": "NumberGT"
-        },
+        "kind": { "type": "string", "const": "GreaterThanRule" },
         "value": { "$ref": "#/definitions/number" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "numberGteRule": {
-      "title": "NumberGteRule",
+    "greaterThanOrEqualRule": {
+      "title": "GreaterThanOrEqualRule",
       "description": "A validation rule that specifies a number that MUST be greater than or equal to a given value.",
       "type": "object",
-      "required": ["kind", "id", "value"],
+      "required": ["kind", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "PrimitiveRule" },
-        "id": {
-          "type": "string",
-          "const": "NumberGTE"
-        },
+        "kind": { "type": "string", "const": "GreaterThanOrEqualRule" },
         "value": { "$ref": "#/definitions/number" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "numberLtRule": {
-      "title": "NumberLtRule",
+    "lessThanRule": {
+      "title": "LessThanRule",
       "description": "A validation rule that specifies a number that MUST be less than a given value.",
       "type": "object",
-      "required": ["kind", "id", "value"],
+      "required": ["kind", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "PrimitiveRule" },
-        "id": {
-          "type": "string",
-          "const": "NumberLT"
-        },
+        "kind": { "type": "string", "const": "LessThanRule" },
         "value": { "$ref": "#/definitions/number" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "numberLteRule": {
-      "title": "NumberLteRule",
+    "lessThanOrEqualRule": {
+      "title": "LessThanOrEqualRule",
       "description": "A validation rule that specifies a number that MUST be less than or equal to a given value.",
       "type": "object",
-      "required": ["kind", "id", "value"],
+      "required": ["kind", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "PrimitiveRule" },
-        "id": {
-          "type": "string",
-          "const": "NumberLTE"
-        },
+        "kind": { "type": "string", "const": "LessThanOrEqualRule" },
         "value": { "$ref": "#/definitions/number" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
@@ -1778,7 +1742,7 @@
 
     "arrayRule": {
       "discriminator": {
-        "propertyName": "id"
+        "propertyName": "kind"
       },
       "description": "A validation rule.",
       "oneOf": [
@@ -1791,13 +1755,9 @@
       "title": "MaxItemsRule",
       "description": "A validation rule that specifies the maximum number of items in an array.",
       "type": "object",
-      "required": ["kind", "id", "max"],
+      "required": ["kind", "max"],
       "properties": {
-        "kind": { "type": "string", "const": "ArrayRule" },
-        "id": {
-          "type": "string",
-          "const": "MaxItems"
-        },
+        "kind": { "type": "string", "const": "MaxItemsRule" },
         "max": { "$ref": "#/definitions/nonNegativeInteger" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
@@ -1807,13 +1767,9 @@
       "title": "MinItemsRule",
       "description": "A validation rule that specifies the minimum number of items in an array.",
       "type": "object",
-      "required": ["kind", "id", "min"],
+      "required": ["kind", "min"],
       "properties": {
-        "kind": { "type": "string", "const": "ArrayRule" },
-        "id": {
-          "type": "string",
-          "const": "MinItems"
-        },
+        "kind": { "type": "string", "const": "MinItemsRule" },
         "min": { "$ref": "#/definitions/nonNegativeInteger" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
@@ -1823,16 +1779,10 @@
       "title": "UniqueItemsRule",
       "description": "A validation rule that specifies that all items in an array MUST be unique.",
       "type": "object",
-      "required": ["kind", "id", "required"],
+      "required": ["kind", "required"],
       "properties": {
-        "kind": { "type": "string", "const": "ArrayRule" },
-        "id": {
-          "type": "string",
-          "const": "UniqueItems"
-        },
-        "required": {
-          "type": "boolean"
-        },
+        "kind": { "type": "string", "const": "UniqueItemsRule" },
+        "required": { "$ref": "#/definitions/true" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
@@ -1840,56 +1790,44 @@
 
     "objectRule": {
       "discriminator": {
-        "propertyName": "id"
+        "propertyName": "kind"
       },
       "oneOf": [
-        { "$ref": "#/definitions/objectMinPropertiesRule" },
-        { "$ref": "#/definitions/objectMaxPropertiesRule" },
-        { "$ref": "#/definitions/objectAdditionalPropertiesRule" }
+        { "$ref": "#/definitions/minPropertiesRule" },
+        { "$ref": "#/definitions/maxPropertiesRule" },
+        { "$ref": "#/definitions/additionalPropertiesRule" }
       ]
     },
-    "objectMinPropertiesRule": {
+    "minPropertiesRule": {
       "title": "MinPropertiesRule",
       "description": "A validation rule that specifies the minimum number of properties on an object. This rule MAY be ignored by tooling if the object type does not define any Map Properties.",
       "type": "object",
-      "required": ["kind", "id", "min"],
+      "required": ["kind", "min"],
       "properties": {
-        "kind": { "type": "string", "const": "ObjectRule" },
-        "id": {
-          "type": "string",
-          "const": "ObjectMinProperties"
-        },
+        "kind": { "type": "string", "const": "MinPropertiesRule" },
         "min": { "$ref": "#/definitions/nonNegativeInteger" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "objectMaxPropertiesRule": {
+    "maxPropertiesRule": {
       "title": "MaxPropertiesRule",
       "description": "A validation rule that specifies the maximum number of properties on an object. This rule MAY be ignored by tooling if the object type does not define any Map Properties.",
       "type": "object",
-      "required": ["kind", "id", "max"],
+      "required": ["kind", "max"],
       "properties": {
-        "kind": { "type": "string", "const": "ObjectRule" },
-        "id": {
-          "type": "string",
-          "const": "ObjectMaxProperties"
-        },
+        "kind": { "type": "string", "const": "MaxPropertiesRule" },
         "max": { "$ref": "#/definitions/nonNegativeInteger" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "objectAdditionalPropertiesRule": {
+    "additionalPropertiesRule": {
       "title": "AdditionalPropertiesRule",
       "type": "object",
-      "required": ["kind", "id", "forbidden"],
+      "required": ["kind", "forbidden"],
       "properties": {
-        "kind": { "type": "string", "const": "ObjectRule" },
-        "id": {
-          "type": "string",
-          "const": "ObjectAdditionalProperties"
-        },
+        "kind": { "type": "string", "const": "AdditionalPropertiesRule" },
         "forbidden": { "$ref": "#/definitions/true" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
