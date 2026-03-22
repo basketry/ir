@@ -681,7 +681,7 @@
         "rules": {
           "description": "A set of constraints that apply to the overall structure of the type. These rules are specific to the type itself and are distinct from rules that apply to property definitions.",
           "type": "array",
-          "items": { "$ref": "#/definitions/objectValidationRule" }
+          "items": { "$ref": "#/definitions/objectRule" }
         },
         "loc": {
           "description": "The encoded location of the type in the source document(s).",
@@ -1014,10 +1014,6 @@
           "description": "The name of the primitive type.",
           "$ref": "#/definitions/primitiveLiteral"
         },
-        "isArray": {
-          "description": "A boolean value that indicates whether the value is an array.",
-          "$ref": "#/definitions/true"
-        },
         "isNullable": {
           "description": "Indicates whether the value MAY explicitly be set to `null`. When `true`, the type definition allows `null` as a valid value in addition to what is specified by `typeName`. Implementations MAY interpret `null` according to the closest equivalent in the target language or platform. (This differs from `isOptional`, where the value is not required to appear at all in the data structure or message.)",
           "$ref": "#/definitions/true"
@@ -1045,25 +1041,21 @@
           ]
         },
         "rules": {
-          "description": "A set of constraints that apply to the value, such as limits on length, numeric range, or array size. These rules define additional validation beyond the basic type definition and are distinct from rules that apply to a containing type.",
+          "description": "A set of constraints that apply specifically to this primitive value, such as string length, string pattern, numeric range, or numeric precision. These rules define additional validation beyond the base primitive type and do not apply to array structure or containing object shape.",
           "type": "array",
-          "items": { "$ref": "#/definitions/validationRule" }
+          "items": { "$ref": "#/definitions/primitiveRule" }
         }
       }
     },
     "complexValue": {
       "type": "object",
       "description": "Represents a value whose type is defined elsewhere in the Service as a named type, enum, or union.",
-      "required": ["kind", "typeName", "rules"],
+      "required": ["kind", "typeName"],
       "properties": {
         "kind": { "type": "string", "const": "ComplexValue" },
         "typeName": {
           "description": "The name of a type, enum, or union defined in this Service. The casing MUST match the casing of the referenced type, enum, or union definition exactly.",
           "$ref": "#/definitions/string"
-        },
-        "isArray": {
-          "description": "A boolean value that indicates whether the value is an array.",
-          "$ref": "#/definitions/true"
         },
         "isNullable": {
           "description": "Indicates whether the value MAY explicitly be set to `null`. When `true`, the type definition allows `null` as a valid value in addition to what is specified by `typeName`. Implementations MAY interpret `null` according to the closest equivalent in the target language or platform. (This differs from `isOptional`, where the value is not required to appear at all in the data structure or message.)",
@@ -1072,11 +1064,31 @@
         "isOptional": {
           "description": "Indicates whether the value MAY be omitted entirely. When `true`, the value is not required to appear in the data structure or message. (This differs from `isNullable`, where the value is present but MAY explicitly be `null`.) If this value is not present, tooling MUST consider the value to be required.",
           "$ref": "#/definitions/true"
+        }
+      }
+    },
+    "arrayValue": {
+      "type": "object",
+      "description": "Represents an array value with a specific item type and optional validation rules.",
+      "required": ["kind", "itemType", "rules"],
+      "properties": {
+        "kind": { "type": "string", "const": "ArrayValue" },
+        "itemType": {
+          "description": "The type of the items in the array. This value defines the data shape and constraints for each item in the array.",
+          "$ref": "#/definitions/memberValue"
+        },
+        "isNullable": {
+          "description": "Indicates whether the array value itself MAY explicitly be set to `null`. When `true`, the value may be either `null` or an array of items described by `itemType`. This does not affect the nullability of individual items within the array. Implementations MAY interpret `null` according to the closest equivalent in the target language or platform. (This differs from `isOptional`, where the array is not required to appear at all in the data structure or message.)",
+          "$ref": "#/definitions/true"
+        },
+        "isOptional": {
+          "description": "Indicates whether the array MAY be omitted entirely. When `true`, the value is not required to appear in the data structure or message. This does not affect the optionality of individual items within the array. (This differs from `isNullable`, where the value is present but MAY explicitly be `null`.) If this value is not present, tooling MUST consider the value to be required.",
+          "$ref": "#/definitions/true"
         },
         "rules": {
-          "description": "A set of constraints that apply to the value, such as limits on length, numeric range, or array size. These rules define additional validation beyond the basic type definition and are distinct from rules that apply to a containing type.",
+          "description": "A set of constraints that apply specifically to the array itself, such as minimum item count, maximum item count, or uniqueness requirements. These rules define validation for the structure of the array, while the shape and validation of each item are defined by `itemType`.",
           "type": "array",
-          "items": { "$ref": "#/definitions/validationRule" }
+          "items": { "$ref": "#/definitions/arrayRule" }
         }
       }
     },
@@ -1086,7 +1098,8 @@
       },
       "oneOf": [
         { "$ref": "#/definitions/primitiveValue" },
-        { "$ref": "#/definitions/complexValue" }
+        { "$ref": "#/definitions/complexValue" },
+        { "$ref": "#/definitions/arrayValue" }
       ]
     },
 
@@ -1601,7 +1614,7 @@
       "pattern": "^(\\d+:)((\\d+;){2}(\\d+)|(\\d+;){4}(\\d+)|(\\d+;){5}(\\d+))$"
     },
 
-    "validationRule": {
+    "primitiveRule": {
       "discriminator": {
         "propertyName": "id"
       },
@@ -1615,10 +1628,7 @@
         { "$ref": "#/definitions/numberGtRule" },
         { "$ref": "#/definitions/numberGteRule" },
         { "$ref": "#/definitions/numberLtRule" },
-        { "$ref": "#/definitions/numberLteRule" },
-        { "$ref": "#/definitions/arrayMaxItemsRule" },
-        { "$ref": "#/definitions/arrayMinItemsRule" },
-        { "$ref": "#/definitions/arrayUniqueItemsRule" }
+        { "$ref": "#/definitions/numberLteRule" }
       ]
     },
     "stringMaxLengthRule": {
@@ -1627,7 +1637,7 @@
       "type": "object",
       "required": ["kind", "id", "length"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
+        "kind": { "type": "string", "const": "PrimitiveRule" },
         "id": {
           "type": "string",
           "const": "StringMaxLength"
@@ -1643,7 +1653,7 @@
       "type": "object",
       "required": ["kind", "id", "length"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
+        "kind": { "type": "string", "const": "PrimitiveRule" },
         "id": {
           "type": "string",
           "const": "StringMinLength"
@@ -1659,7 +1669,7 @@
       "type": "object",
       "required": ["kind", "id", "pattern"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
+        "kind": { "type": "string", "const": "PrimitiveRule" },
         "id": {
           "type": "string",
           "const": "StringPattern"
@@ -1675,7 +1685,7 @@
       "type": "object",
       "required": ["kind", "id", "format"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
+        "kind": { "type": "string", "const": "PrimitiveRule" },
         "id": {
           "type": "string",
           "const": "StringFormat"
@@ -1691,7 +1701,7 @@
       "type": "object",
       "required": ["kind", "id", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
+        "kind": { "type": "string", "const": "PrimitiveRule" },
         "id": {
           "type": "string",
           "const": "NumberMultipleOf"
@@ -1707,7 +1717,7 @@
       "type": "object",
       "required": ["kind", "id", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
+        "kind": { "type": "string", "const": "PrimitiveRule" },
         "id": {
           "type": "string",
           "const": "NumberGT"
@@ -1723,7 +1733,7 @@
       "type": "object",
       "required": ["kind", "id", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
+        "kind": { "type": "string", "const": "PrimitiveRule" },
         "id": {
           "type": "string",
           "const": "NumberGTE"
@@ -1739,7 +1749,7 @@
       "type": "object",
       "required": ["kind", "id", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
+        "kind": { "type": "string", "const": "PrimitiveRule" },
         "id": {
           "type": "string",
           "const": "NumberLT"
@@ -1755,7 +1765,7 @@
       "type": "object",
       "required": ["kind", "id", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
+        "kind": { "type": "string", "const": "PrimitiveRule" },
         "id": {
           "type": "string",
           "const": "NumberLTE"
@@ -1765,48 +1775,60 @@
       },
       "additionalProperties": false
     },
-    "arrayMaxItemsRule": {
-      "title": "ArrayMaxItemsRule",
+
+    "arrayRule": {
+      "discriminator": {
+        "propertyName": "id"
+      },
+      "description": "A validation rule.",
+      "oneOf": [
+        { "$ref": "#/definitions/maxItemsRule" },
+        { "$ref": "#/definitions/minItemsRule" },
+        { "$ref": "#/definitions/uniqueItemsRule" }
+      ]
+    },
+    "maxItemsRule": {
+      "title": "MaxItemsRule",
       "description": "A validation rule that specifies the maximum number of items in an array.",
       "type": "object",
       "required": ["kind", "id", "max"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
+        "kind": { "type": "string", "const": "ArrayRule" },
         "id": {
           "type": "string",
-          "const": "ArrayMaxItems"
+          "const": "MaxItems"
         },
         "max": { "$ref": "#/definitions/nonNegativeInteger" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "arrayMinItemsRule": {
-      "title": "ArrayMinItemsRule",
+    "minItemsRule": {
+      "title": "MinItemsRule",
       "description": "A validation rule that specifies the minimum number of items in an array.",
       "type": "object",
       "required": ["kind", "id", "min"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
+        "kind": { "type": "string", "const": "ArrayRule" },
         "id": {
           "type": "string",
-          "const": "ArrayMinItems"
+          "const": "MinItems"
         },
         "min": { "$ref": "#/definitions/nonNegativeInteger" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "arrayUniqueItemsRule": {
-      "title": "ArrayUniqueItemsRule",
+    "uniqueItemsRule": {
+      "title": "UniqueItemsRule",
       "description": "A validation rule that specifies that all items in an array MUST be unique.",
       "type": "object",
       "required": ["kind", "id", "required"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
+        "kind": { "type": "string", "const": "ArrayRule" },
         "id": {
           "type": "string",
-          "const": "ArrayUniqueItems"
+          "const": "UniqueItems"
         },
         "required": {
           "type": "boolean"
@@ -1816,7 +1838,7 @@
       "additionalProperties": false
     },
 
-    "objectValidationRule": {
+    "objectRule": {
       "discriminator": {
         "propertyName": "id"
       },
@@ -1827,12 +1849,12 @@
       ]
     },
     "objectMinPropertiesRule": {
-      "title": "ObjectMinPropertiesRule",
+      "title": "MinPropertiesRule",
       "description": "A validation rule that specifies the minimum number of properties on an object. This rule MAY be ignored by tooling if the object type does not define any Map Properties.",
       "type": "object",
       "required": ["kind", "id", "min"],
       "properties": {
-        "kind": { "type": "string", "const": "ObjectValidationRule" },
+        "kind": { "type": "string", "const": "ObjectRule" },
         "id": {
           "type": "string",
           "const": "ObjectMinProperties"
@@ -1843,12 +1865,12 @@
       "additionalProperties": false
     },
     "objectMaxPropertiesRule": {
-      "title": "ObjectMaxPropertiesRule",
+      "title": "MaxPropertiesRule",
       "description": "A validation rule that specifies the maximum number of properties on an object. This rule MAY be ignored by tooling if the object type does not define any Map Properties.",
       "type": "object",
       "required": ["kind", "id", "max"],
       "properties": {
-        "kind": { "type": "string", "const": "ObjectValidationRule" },
+        "kind": { "type": "string", "const": "ObjectRule" },
         "id": {
           "type": "string",
           "const": "ObjectMaxProperties"
@@ -1859,11 +1881,11 @@
       "additionalProperties": false
     },
     "objectAdditionalPropertiesRule": {
-      "title": "ObjectAdditionalPropertiesRule",
+      "title": "AdditionalPropertiesRule",
       "type": "object",
       "required": ["kind", "id", "forbidden"],
       "properties": {
-        "kind": { "type": "string", "const": "ObjectValidationRule" },
+        "kind": { "type": "string", "const": "ObjectRule" },
         "id": {
           "type": "string",
           "const": "ObjectAdditionalProperties"

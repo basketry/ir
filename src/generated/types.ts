@@ -48,6 +48,15 @@ export type Primitive =
 
 export type Severity = 'error' | 'warning' | 'info';
 
+export type AdditionalPropertiesRule = {
+  kind: 'ObjectRule';
+  id: 'ObjectAdditionalProperties';
+  forbidden: TrueLiteral;
+
+  /** The encoded location of this node in the source document(s). */
+  loc?: string;
+};
+
 export type ApiKeyScheme = {
   kind: 'ApiKeyScheme';
   type: ApiKeySchemeType;
@@ -76,34 +85,42 @@ export type ApiKeySchemeType = {
   loc?: string;
 };
 
-/** A validation rule that specifies the maximum number of items in an array. */
-export type ArrayMaxItemsRule = {
-  kind: 'ValidationRule';
-  id: 'ArrayMaxItems';
-  max: NonNegativeIntegerLiteral;
+/** Represents an array value with a specific item type and optional validation rules. */
+export type ArrayValue = {
+  kind: 'ArrayValue';
 
-  /** The encoded location of this node in the source document(s). */
-  loc?: string;
-};
+  /**
+   * The type of the items in the array. This value defines the data shape and
+   * constraints for each item in the array.
+   */
+  itemType: MemberValue;
 
-/** A validation rule that specifies the minimum number of items in an array. */
-export type ArrayMinItemsRule = {
-  kind: 'ValidationRule';
-  id: 'ArrayMinItems';
-  min: NonNegativeIntegerLiteral;
+  /**
+   * Indicates whether the array value itself MAY explicitly be set to `null`. When
+   * `true`, the value may be either `null` or an array of items described by
+   * `itemType`. This does not affect the nullability of individual items within the
+   * array. Implementations MAY interpret `null` according to the closest equivalent
+   * in the target language or platform. (This differs from `isOptional`, where the
+   * array is not required to appear at all in the data structure or message.)
+   */
+  isNullable?: TrueLiteral;
 
-  /** The encoded location of this node in the source document(s). */
-  loc?: string;
-};
+  /**
+   * Indicates whether the array MAY be omitted entirely. When `true`, the value is
+   * not required to appear in the data structure or message. This does not affect the
+   * optionality of individual items within the array. (This differs from
+   * `isNullable`, where the value is present but MAY explicitly be `null`.) If this
+   * value is not present, tooling MUST consider the value to be required.
+   */
+  isOptional?: TrueLiteral;
 
-/** A validation rule that specifies that all items in an array MUST be unique. */
-export type ArrayUniqueItemsRule = {
-  kind: 'ValidationRule';
-  id: 'ArrayUniqueItems';
-  required: boolean;
-
-  /** The encoded location of this node in the source document(s). */
-  loc?: string;
+  /**
+   * A set of constraints that apply specifically to the array itself, such as minimum
+   * item count, maximum item count, or uniqueness requirements. These rules define
+   * validation for the structure of the array, while the shape and validation of each
+   * item are defined by `itemType`.
+   */
+  rules: ArrayRule[];
 };
 
 export type BasicScheme = {
@@ -160,9 +177,6 @@ export type ComplexValue = {
    */
   typeName: StringLiteral;
 
-  /** A boolean value that indicates whether the value is an array. */
-  isArray?: TrueLiteral;
-
   /**
    * Indicates whether the value MAY explicitly be set to `null`. When `true`, the
    * type definition allows `null` as a valid value in addition to what is specified
@@ -180,13 +194,6 @@ export type ComplexValue = {
    * value is not present, tooling MUST consider the value to be required.
    */
   isOptional?: TrueLiteral;
-
-  /**
-   * A set of constraints that apply to the value, such as limits on length, numeric
-   * range, or array size. These rules define additional validation beyond the basic
-   * type definition and are distinct from rules that apply to a containing type.
-   */
-  rules: ValidationRule[];
 };
 
 /**
@@ -618,6 +625,30 @@ export type MapValue = {
   meta?: MetaValue[];
 };
 
+/** A validation rule that specifies the maximum number of items in an array. */
+export type MaxItemsRule = {
+  kind: 'ArrayRule';
+  id: 'MaxItems';
+  max: NonNegativeIntegerLiteral;
+
+  /** The encoded location of this node in the source document(s). */
+  loc?: string;
+};
+
+/**
+ * A validation rule that specifies the maximum number of properties on an object.
+ * This rule MAY be ignored by tooling if the object type does not define any Map
+ * Properties.
+ */
+export type MaxPropertiesRule = {
+  kind: 'ObjectRule';
+  id: 'ObjectMaxProperties';
+  max: NonNegativeIntegerLiteral;
+
+  /** The encoded location of this node in the source document(s). */
+  loc?: string;
+};
+
 /** Metadata in the form of a key-value pair. */
 export type MetaValue = {
   kind: 'MetaValue';
@@ -671,6 +702,30 @@ export type Method = {
   meta?: MetaValue[];
 };
 
+/** A validation rule that specifies the minimum number of items in an array. */
+export type MinItemsRule = {
+  kind: 'ArrayRule';
+  id: 'MinItems';
+  min: NonNegativeIntegerLiteral;
+
+  /** The encoded location of this node in the source document(s). */
+  loc?: string;
+};
+
+/**
+ * A validation rule that specifies the minimum number of properties on an object.
+ * This rule MAY be ignored by tooling if the object type does not define any Map
+ * Properties.
+ */
+export type MinPropertiesRule = {
+  kind: 'ObjectRule';
+  id: 'ObjectMinProperties';
+  min: NonNegativeIntegerLiteral;
+
+  /** The encoded location of this node in the source document(s). */
+  loc?: string;
+};
+
 /** Represents a non-empty string value exactly as it appears in the original source document. */
 export type NonEmptyStringLiteral = {
   kind: 'NonEmptyStringLiteral';
@@ -709,7 +764,7 @@ export type NullLiteral = {
 
 /** A validation rule that specifies a number that MUST be greater than or equal to a given value. */
 export type NumberGteRule = {
-  kind: 'ValidationRule';
+  kind: 'PrimitiveRule';
   id: 'NumberGTE';
   value: NumberLiteral;
 
@@ -719,7 +774,7 @@ export type NumberGteRule = {
 
 /** A validation rule that specifies a number that MUST be greater than a given value. */
 export type NumberGtRule = {
-  kind: 'ValidationRule';
+  kind: 'PrimitiveRule';
   id: 'NumberGT';
   value: NumberLiteral;
 
@@ -738,7 +793,7 @@ export type NumberLiteral = {
 
 /** A validation rule that specifies a number that MUST be less than or equal to a given value. */
 export type NumberLteRule = {
-  kind: 'ValidationRule';
+  kind: 'PrimitiveRule';
   id: 'NumberLTE';
   value: NumberLiteral;
 
@@ -748,7 +803,7 @@ export type NumberLteRule = {
 
 /** A validation rule that specifies a number that MUST be less than a given value. */
 export type NumberLtRule = {
-  kind: 'ValidationRule';
+  kind: 'PrimitiveRule';
   id: 'NumberLT';
   value: NumberLiteral;
 
@@ -758,7 +813,7 @@ export type NumberLtRule = {
 
 /** A validation rule that specifies a multiple of a number. */
 export type NumberMultipleOfRule = {
-  kind: 'ValidationRule';
+  kind: 'PrimitiveRule';
   id: 'NumberMultipleOf';
   value: NonNegativeNumberLiteral;
 
@@ -876,43 +931,6 @@ export type OAuth2Scope = {
   /** The encoded location of this node in the source document(s). */
   loc?: string;
   meta?: MetaValue[];
-};
-
-export type ObjectAdditionalPropertiesRule = {
-  kind: 'ObjectValidationRule';
-  id: 'ObjectAdditionalProperties';
-  forbidden: TrueLiteral;
-
-  /** The encoded location of this node in the source document(s). */
-  loc?: string;
-};
-
-/**
- * A validation rule that specifies the maximum number of properties on an object.
- * This rule MAY be ignored by tooling if the object type does not define any Map
- * Properties.
- */
-export type ObjectMaxPropertiesRule = {
-  kind: 'ObjectValidationRule';
-  id: 'ObjectMaxProperties';
-  max: NonNegativeIntegerLiteral;
-
-  /** The encoded location of this node in the source document(s). */
-  loc?: string;
-};
-
-/**
- * A validation rule that specifies the minimum number of properties on an object.
- * This rule MAY be ignored by tooling if the object type does not define any Map
- * Properties.
- */
-export type ObjectMinPropertiesRule = {
-  kind: 'ObjectValidationRule';
-  id: 'ObjectMinProperties';
-  min: NonNegativeIntegerLiteral;
-
-  /** The encoded location of this node in the source document(s). */
-  loc?: string;
 };
 
 /**
@@ -1078,9 +1096,6 @@ export type PrimitiveValue = {
   /** The name of the primitive type. */
   typeName: PrimitiveLiteral;
 
-  /** A boolean value that indicates whether the value is an array. */
-  isArray?: TrueLiteral;
-
   /**
    * Indicates whether the value MAY explicitly be set to `null`. When `true`, the
    * type definition allows `null` as a valid value in addition to what is specified
@@ -1114,11 +1129,12 @@ export type PrimitiveValue = {
   default?: PrimitiveValueDefault;
 
   /**
-   * A set of constraints that apply to the value, such as limits on length, numeric
-   * range, or array size. These rules define additional validation beyond the basic
-   * type definition and are distinct from rules that apply to a containing type.
+   * A set of constraints that apply specifically to this primitive value, such as
+   * string length, string pattern, numeric range, or numeric precision. These rules
+   * define additional validation beyond the base primitive type and do not apply to
+   * array structure or containing object shape.
    */
-  rules: ValidationRule[];
+  rules: PrimitiveRule[];
 };
 
 /**
@@ -1346,7 +1362,7 @@ export type SimpleUnion = {
  * according to the closest equivalent in the target language or platform.
  */
 export type StringFormatRule = {
-  kind: 'ValidationRule';
+  kind: 'PrimitiveRule';
   id: 'StringFormat';
   format: NonEmptyStringLiteral;
 
@@ -1365,7 +1381,7 @@ export type StringLiteral = {
 
 /** A validation rule that specifies the maximum length of a string. */
 export type StringMaxLengthRule = {
-  kind: 'ValidationRule';
+  kind: 'PrimitiveRule';
   id: 'StringMaxLength';
   length: NonNegativeIntegerLiteral;
 
@@ -1375,7 +1391,7 @@ export type StringMaxLengthRule = {
 
 /** A validation rule that specifies the minimum length of a string. */
 export type StringMinLengthRule = {
-  kind: 'ValidationRule';
+  kind: 'PrimitiveRule';
   id: 'StringMinLength';
   length: NonNegativeIntegerLiteral;
 
@@ -1385,7 +1401,7 @@ export type StringMinLengthRule = {
 
 /** A validation rule that specifies a regular expression pattern that a string MUST match. */
 export type StringPatternRule = {
-  kind: 'ValidationRule';
+  kind: 'PrimitiveRule';
   id: 'StringPattern';
   pattern: NonEmptyStringLiteral;
 
@@ -1451,13 +1467,23 @@ export type Type = {
    * are specific to the type itself and are distinct from rules that apply to
    * property definitions.
    */
-  rules: ObjectValidationRule[];
+  rules: ObjectRule[];
 
   /** The encoded location of the type in the source document(s). */
   loc?: string;
 
   /** An array of metadata values for the type. */
   meta?: MetaValue[];
+};
+
+/** A validation rule that specifies that all items in an array MUST be unique. */
+export type UniqueItemsRule = {
+  kind: 'ArrayRule';
+  id: 'UniqueItems';
+  required: boolean;
+
+  /** The encoded location of this node in the source document(s). */
+  loc?: string;
 };
 
 /** An untyped literal value. Implementations MUST NOT assume any particular type for this value. */
@@ -1567,13 +1593,28 @@ export type Violation = {
   link?: string;
 };
 
+/** A validation rule. */
+export type ArrayRule = MaxItemsRule | MinItemsRule | UniqueItemsRule;
+
+export function isMaxItemsRule(obj: ArrayRule): obj is MaxItemsRule {
+  return obj.id === 'MaxItems';
+}
+
+export function isMinItemsRule(obj: ArrayRule): obj is MinItemsRule {
+  return obj.id === 'MinItems';
+}
+
+export function isUniqueItemsRule(obj: ArrayRule): obj is UniqueItemsRule {
+  return obj.id === 'UniqueItems';
+}
+
 /**
  * Echoes the ID of the corresponding request. Used by the caller to correlate
  * responses. If the request could not be parsed, this value SHOULD be `null`.
  */
 export type ErrorResponseId = string | number | any;
 
-export type MemberValue = PrimitiveValue | ComplexValue;
+export type MemberValue = PrimitiveValue | ComplexValue | ArrayValue;
 
 export function isPrimitiveValue(obj: MemberValue): obj is PrimitiveValue {
   return obj.kind === 'PrimitiveValue';
@@ -1581,6 +1622,10 @@ export function isPrimitiveValue(obj: MemberValue): obj is PrimitiveValue {
 
 export function isComplexValue(obj: MemberValue): obj is ComplexValue {
   return obj.kind === 'ComplexValue';
+}
+
+export function isArrayValue(obj: MemberValue): obj is ArrayValue {
+  return obj.kind === 'ArrayValue';
 }
 
 export type OAuth2Flow =
@@ -1613,27 +1658,81 @@ export function isOAuth2AuthorizationCodeFlow(
   return obj.kind === 'OAuth2AuthorizationCodeFlow';
 }
 
-export type ObjectValidationRule =
-  | ObjectMinPropertiesRule
-  | ObjectMaxPropertiesRule
-  | ObjectAdditionalPropertiesRule;
+export type ObjectRule =
+  | MinPropertiesRule
+  | MaxPropertiesRule
+  | AdditionalPropertiesRule;
 
-export function isObjectMinPropertiesRule(
-  obj: ObjectValidationRule,
-): obj is ObjectMinPropertiesRule {
+export function isMinPropertiesRule(obj: ObjectRule): obj is MinPropertiesRule {
   return obj.id === 'ObjectMinProperties';
 }
 
-export function isObjectMaxPropertiesRule(
-  obj: ObjectValidationRule,
-): obj is ObjectMaxPropertiesRule {
+export function isMaxPropertiesRule(obj: ObjectRule): obj is MaxPropertiesRule {
   return obj.id === 'ObjectMaxProperties';
 }
 
-export function isObjectAdditionalPropertiesRule(
-  obj: ObjectValidationRule,
-): obj is ObjectAdditionalPropertiesRule {
+export function isAdditionalPropertiesRule(
+  obj: ObjectRule,
+): obj is AdditionalPropertiesRule {
   return obj.id === 'ObjectAdditionalProperties';
+}
+
+/** A validation rule. */
+export type PrimitiveRule =
+  | StringMaxLengthRule
+  | StringMinLengthRule
+  | StringPatternRule
+  | StringFormatRule
+  | NumberMultipleOfRule
+  | NumberGtRule
+  | NumberGteRule
+  | NumberLtRule
+  | NumberLteRule;
+
+export function isStringMaxLengthRule(
+  obj: PrimitiveRule,
+): obj is StringMaxLengthRule {
+  return obj.id === 'StringMaxLength';
+}
+
+export function isStringMinLengthRule(
+  obj: PrimitiveRule,
+): obj is StringMinLengthRule {
+  return obj.id === 'StringMinLength';
+}
+
+export function isStringPatternRule(
+  obj: PrimitiveRule,
+): obj is StringPatternRule {
+  return obj.id === 'StringPattern';
+}
+
+export function isStringFormatRule(
+  obj: PrimitiveRule,
+): obj is StringFormatRule {
+  return obj.id === 'StringFormat';
+}
+
+export function isNumberMultipleOfRule(
+  obj: PrimitiveRule,
+): obj is NumberMultipleOfRule {
+  return obj.id === 'NumberMultipleOf';
+}
+
+export function isNumberGtRule(obj: PrimitiveRule): obj is NumberGtRule {
+  return obj.id === 'NumberGT';
+}
+
+export function isNumberGteRule(obj: PrimitiveRule): obj is NumberGteRule {
+  return obj.id === 'NumberGTE';
+}
+
+export function isNumberLtRule(obj: PrimitiveRule): obj is NumberLtRule {
+  return obj.id === 'NumberLT';
+}
+
+export function isNumberLteRule(obj: PrimitiveRule): obj is NumberLteRule {
+  return obj.id === 'NumberLTE';
 }
 
 /**
@@ -1687,83 +1786,4 @@ export function isSimpleUnion(obj: Union): obj is SimpleUnion {
 
 export function isDiscriminatedUnion(obj: Union): obj is DiscriminatedUnion {
   return obj.kind === 'DiscriminatedUnion';
-}
-
-/** A validation rule. */
-export type ValidationRule =
-  | StringMaxLengthRule
-  | StringMinLengthRule
-  | StringPatternRule
-  | StringFormatRule
-  | NumberMultipleOfRule
-  | NumberGtRule
-  | NumberGteRule
-  | NumberLtRule
-  | NumberLteRule
-  | ArrayMaxItemsRule
-  | ArrayMinItemsRule
-  | ArrayUniqueItemsRule;
-
-export function isStringMaxLengthRule(
-  obj: ValidationRule,
-): obj is StringMaxLengthRule {
-  return obj.id === 'StringMaxLength';
-}
-
-export function isStringMinLengthRule(
-  obj: ValidationRule,
-): obj is StringMinLengthRule {
-  return obj.id === 'StringMinLength';
-}
-
-export function isStringPatternRule(
-  obj: ValidationRule,
-): obj is StringPatternRule {
-  return obj.id === 'StringPattern';
-}
-
-export function isStringFormatRule(
-  obj: ValidationRule,
-): obj is StringFormatRule {
-  return obj.id === 'StringFormat';
-}
-
-export function isNumberMultipleOfRule(
-  obj: ValidationRule,
-): obj is NumberMultipleOfRule {
-  return obj.id === 'NumberMultipleOf';
-}
-
-export function isNumberGtRule(obj: ValidationRule): obj is NumberGtRule {
-  return obj.id === 'NumberGT';
-}
-
-export function isNumberGteRule(obj: ValidationRule): obj is NumberGteRule {
-  return obj.id === 'NumberGTE';
-}
-
-export function isNumberLtRule(obj: ValidationRule): obj is NumberLtRule {
-  return obj.id === 'NumberLT';
-}
-
-export function isNumberLteRule(obj: ValidationRule): obj is NumberLteRule {
-  return obj.id === 'NumberLTE';
-}
-
-export function isArrayMaxItemsRule(
-  obj: ValidationRule,
-): obj is ArrayMaxItemsRule {
-  return obj.id === 'ArrayMaxItems';
-}
-
-export function isArrayMinItemsRule(
-  obj: ValidationRule,
-): obj is ArrayMinItemsRule {
-  return obj.id === 'ArrayMinItems';
-}
-
-export function isArrayUniqueItemsRule(
-  obj: ValidationRule,
-): obj is ArrayUniqueItemsRule {
-  return obj.id === 'ArrayUniqueItems';
 }
