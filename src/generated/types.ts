@@ -1294,6 +1294,63 @@ export type SecurityOption = {
   loc?: string;
 };
 
+/** Represents a full semantic version in canonical structured form. */
+export type SemanticVersion = {
+  kind: 'SemanticVersion';
+
+  /**
+   * The full semantic version string exactly as it appears in the source document,
+   * including any pre-release and build metadata.
+   */
+  raw: StringLiteral;
+
+  /** The major version number. */
+  major: NonNegativeIntegerLiteral;
+
+  /** The minor version number. */
+  minor: NonNegativeIntegerLiteral;
+
+  /** The patch version number. */
+  patch: NonNegativeIntegerLiteral;
+
+  /**
+   * Pre-release information that appears after the patch version and is introduced by
+   * `-` in the raw semantic version string.
+   */
+  prerelease?: SemanticVersionQualifier;
+
+  /**
+   * Build metadata that appears after the patch version or pre-release information
+   * and is introduced by `+` in the raw semantic version string.
+   */
+  build?: SemanticVersionQualifier;
+
+  /** The encoded location of the semantic version in the source document(s). */
+  loc?: string;
+};
+
+/** Represents a semantic version qualifier that appears after the core `major.minor.patch` version. */
+export type SemanticVersionQualifier = {
+  kind: 'SemanticVersionQualifier';
+
+  /**
+   * The exact qualifier text as it appears in the source document, excluding the
+   * leading delimiter (`-` for pre-release or `+` for build metadata).
+   */
+  raw: StringLiteral;
+
+  /**
+   * The ordered set of dot-separated identifiers that make up the qualifier. Numeric
+   * identifiers MUST be represented as strings or non-negative integers. Negative
+   * integers or identifiers with leading zeros are invalid according to the Semantic
+   * Versioning specification and MUST be preserved as strings.
+   */
+  identifiers: SemanticVersionIdentifier[];
+
+  /** The encoded location of the qualifier in the source document(s). */
+  loc?: string;
+};
+
 /**
  * The `Service` object is the root of a Basketry Intermediate Representation (IR)
  * document. It defines the core attributes of an API service, including its name,
@@ -1308,16 +1365,16 @@ export type Service = {
   /**
    * This string MUST be the version number of the Basketry Specification that the
    * Intermediate Representation uses. The `basketry` field SHOULD be used by tooling
-   * to interpret the IR document. This is not related to the Service `majorVersion`
-   * string.
+   * to interpret the IR document. This is not related to the Service `version`
+   * object.
    */
   basketry: '0.3';
 
   /** The title of the service */
   title: StringLiteral;
 
-  /** The major version of the Service (which is distinct from the Basketry Specification version). */
-  majorVersion: IntegerLiteral;
+  /** The semantic version of the Service (which is distinct from the Basketry Specification version). */
+  version: SemanticVersion;
 
   /**
    * An array of paths to the original source documents for this service. These paths
@@ -1780,3 +1837,7 @@ export function isApiKeyScheme(obj: SecurityScheme): obj is ApiKeyScheme {
 export function isOAuth2Scheme(obj: SecurityScheme): obj is OAuth2Scheme {
   return obj.kind === 'OAuth2Scheme';
 }
+
+export type SemanticVersionIdentifier =
+  | StringLiteral
+  | NonNegativeIntegerLiteral;

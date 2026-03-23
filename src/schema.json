@@ -42,7 +42,7 @@
         "kind",
         "basketry",
         "title",
-        "majorVersion",
+        "version",
         "sourcePaths",
         "interfaces",
         "definitions"
@@ -51,7 +51,7 @@
         "$schema": { "type": "string" },
         "kind": { "type": "string", "const": "Service" },
         "basketry": {
-          "description": "This string MUST be the version number of the Basketry Specification that the Intermediate Representation uses. The `basketry` field SHOULD be used by tooling to interpret the IR document. This is not related to the Service `majorVersion` string.",
+          "description": "This string MUST be the version number of the Basketry Specification that the Intermediate Representation uses. The `basketry` field SHOULD be used by tooling to interpret the IR document. This is not related to the Service `version` object.",
           "type": "string",
           "const": "0.3"
         },
@@ -60,9 +60,9 @@
           "$ref": "#/definitions/string"
         },
 
-        "majorVersion": {
-          "description": "The major version of the Service (which is distinct from the Basketry Specification version).",
-          "$ref": "#/definitions/integer"
+        "version": {
+          "description": "The semantic version of the Service (which is distinct from the Basketry Specification version).",
+          "$ref": "#/definitions/semanticVersion"
         },
         "sourcePaths": {
           "type": "array",
@@ -502,6 +502,75 @@
           "items": { "$ref": "#/definitions/file" }
         }
       }
+    },
+
+    "semanticVersion": {
+      "type": "object",
+      "title": "SemanticVersion",
+      "description": "Represents a full semantic version in canonical structured form.",
+      "required": ["kind", "raw", "major", "minor", "patch"],
+      "properties": {
+        "kind": { "type": "string", "const": "SemanticVersion" },
+        "raw": {
+          "description": "The full semantic version string exactly as it appears in the source document, including any pre-release and build metadata.",
+          "$ref": "#/definitions/string"
+        },
+        "major": {
+          "description": "The major version number.",
+          "$ref": "#/definitions/nonNegativeInteger"
+        },
+        "minor": {
+          "description": "The minor version number.",
+          "$ref": "#/definitions/nonNegativeInteger"
+        },
+        "patch": {
+          "description": "The patch version number.",
+          "$ref": "#/definitions/nonNegativeInteger"
+        },
+        "prerelease": {
+          "description": "Pre-release information that appears after the patch version and is introduced by `-` in the raw semantic version string.",
+          "$ref": "#/definitions/semanticVersionQualifier"
+        },
+        "build": {
+          "description": "Build metadata that appears after the patch version or pre-release information and is introduced by `+` in the raw semantic version string.",
+          "$ref": "#/definitions/semanticVersionQualifier"
+        },
+        "loc": {
+          "description": "The encoded location of the semantic version in the source document(s).",
+          "$ref": "#/definitions/encodedRange"
+        }
+      },
+      "additionalProperties": false
+    },
+    "semanticVersionQualifier": {
+      "type": "object",
+      "title": "SemanticVersionQualifier",
+      "description": "Represents a semantic version qualifier that appears after the core `major.minor.patch` version.",
+      "required": ["kind", "raw", "identifiers"],
+      "properties": {
+        "kind": { "type": "string", "const": "SemanticVersionQualifier" },
+        "raw": {
+          "description": "The exact qualifier text as it appears in the source document, excluding the leading delimiter (`-` for pre-release or `+` for build metadata).",
+          "$ref": "#/definitions/string"
+        },
+        "identifiers": {
+          "type": "array",
+          "description": "The ordered set of dot-separated identifiers that make up the qualifier. Numeric identifiers MUST be represented as strings or non-negative integers. Negative integers or identifiers with leading zeros are invalid according to the Semantic Versioning specification and MUST be preserved as strings.",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/semanticVersionIdentifier" }
+        },
+        "loc": {
+          "description": "The encoded location of the qualifier in the source document(s).",
+          "$ref": "#/definitions/encodedRange"
+        }
+      },
+      "additionalProperties": false
+    },
+    "semanticVersionIdentifier": {
+      "oneOf": [
+        { "$ref": "#/definitions/string" },
+        { "$ref": "#/definitions/nonNegativeInteger" }
+      ]
     },
 
     "interface": {
