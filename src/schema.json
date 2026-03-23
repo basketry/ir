@@ -42,29 +42,27 @@
         "kind",
         "basketry",
         "title",
-        "majorVersion",
+        "version",
         "sourcePaths",
         "interfaces",
-        "types",
-        "enums",
-        "unions"
+        "definitions"
       ],
       "properties": {
         "$schema": { "type": "string" },
         "kind": { "type": "string", "const": "Service" },
         "basketry": {
-          "description": "This string MUST be the version number of the Basketry Specification that the Intermediate Representation uses. The `basketry` field SHOULD be used by tooling to interpret the IR document. This is not related to the Service `majorVersion` string.",
+          "description": "This string MUST be the version number of the Basketry Specification that the Intermediate Representation uses. The `basketry` field SHOULD be used by tooling to interpret the IR document. This is not related to the Service `version` object.",
           "type": "string",
-          "const": "0.2"
+          "const": "0.3"
         },
         "title": {
           "description": "The title of the service",
           "$ref": "#/definitions/string"
         },
 
-        "majorVersion": {
-          "description": "The major version of the Service (which is distinct from the Basketry Specification version).",
-          "$ref": "#/definitions/integer"
+        "version": {
+          "description": "The semantic version of the Service (which is distinct from the Basketry Specification version).",
+          "$ref": "#/definitions/semanticVersion"
         },
         "sourcePaths": {
           "type": "array",
@@ -78,20 +76,9 @@
             "$ref": "#/definitions/interface"
           }
         },
-        "types": {
-          "description": "An array of Types defined in this Service.",
-          "type": "array",
-          "items": { "$ref": "#/definitions/type" }
-        },
-        "enums": {
-          "description": "An array of Enums defined in this Service.",
-          "type": "array",
-          "items": { "$ref": "#/definitions/enum" }
-        },
-        "unions": {
-          "description": "An array of Unions defined in this Service.",
-          "type": "array",
-          "items": { "$ref": "#/definitions/union" }
+        "definitions": {
+          "description": "A map of all reusable types, enums, and unions defined in the service. Each key is the name of the definition, and the value is the definition itself.",
+          "$ref": "#/definitions/definitions"
         },
         "loc": {
           "description": "The encoded location of the service in the source document(s).",
@@ -517,6 +504,75 @@
       }
     },
 
+    "semanticVersion": {
+      "type": "object",
+      "title": "SemanticVersion",
+      "description": "Represents a full semantic version in canonical structured form.",
+      "required": ["kind", "raw", "major", "minor", "patch"],
+      "properties": {
+        "kind": { "type": "string", "const": "SemanticVersion" },
+        "raw": {
+          "description": "The full semantic version string exactly as it appears in the source document, including any pre-release and build metadata.",
+          "$ref": "#/definitions/string"
+        },
+        "major": {
+          "description": "The major version number.",
+          "$ref": "#/definitions/nonNegativeInteger"
+        },
+        "minor": {
+          "description": "The minor version number.",
+          "$ref": "#/definitions/nonNegativeInteger"
+        },
+        "patch": {
+          "description": "The patch version number.",
+          "$ref": "#/definitions/nonNegativeInteger"
+        },
+        "prerelease": {
+          "description": "Pre-release information that appears after the patch version and is introduced by `-` in the raw semantic version string.",
+          "$ref": "#/definitions/semanticVersionQualifier"
+        },
+        "build": {
+          "description": "Build metadata that appears after the patch version or pre-release information and is introduced by `+` in the raw semantic version string.",
+          "$ref": "#/definitions/semanticVersionQualifier"
+        },
+        "loc": {
+          "description": "The encoded location of the semantic version in the source document(s).",
+          "$ref": "#/definitions/encodedRange"
+        }
+      },
+      "additionalProperties": false
+    },
+    "semanticVersionQualifier": {
+      "type": "object",
+      "title": "SemanticVersionQualifier",
+      "description": "Represents a semantic version qualifier that appears after the core `major.minor.patch` version.",
+      "required": ["kind", "raw", "identifiers"],
+      "properties": {
+        "kind": { "type": "string", "const": "SemanticVersionQualifier" },
+        "raw": {
+          "description": "The exact qualifier text as it appears in the source document, excluding the leading delimiter (`-` for pre-release or `+` for build metadata).",
+          "$ref": "#/definitions/string"
+        },
+        "identifiers": {
+          "type": "array",
+          "description": "The ordered set of dot-separated identifiers that make up the qualifier. Numeric identifiers MUST be represented as strings or non-negative integers. Negative integers or identifiers with leading zeros are invalid according to the Semantic Versioning specification and MUST be preserved as strings.",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/semanticVersionIdentifier" }
+        },
+        "loc": {
+          "description": "The encoded location of the qualifier in the source document(s).",
+          "$ref": "#/definitions/encodedRange"
+        }
+      },
+      "additionalProperties": false
+    },
+    "semanticVersionIdentifier": {
+      "oneOf": [
+        { "$ref": "#/definitions/string" },
+        { "$ref": "#/definitions/nonNegativeInteger" }
+      ]
+    },
+
     "interface": {
       "type": "object",
       "description": "An Interface defines a cohesive set of related methods that collectively represent a functional contract within a service. Interfaces act as the primary grouping mechanism for operations and are protocol-agnostic by default. They provide a stable, language-neutral abstraction of service capabilities, ensuring that tooling can target a wide range of programming languages and frameworks without losing semantic meaning.",
@@ -650,6 +706,26 @@
       }
     },
 
+    "definitions": {
+      "type": "object",
+      "description": "A map of all reusable types, enums, and unions defined in the service. Each key is the name of the definition, and the value is the definition itself.",
+      "additionalProperties": {
+        "$ref": "#/definitions/definition"
+      }
+    },
+    "definition": {
+      "description": "A Definition represents a reusable type, enum, or union within the service. Each definition has a unique name and a specific structure that can be referenced throughout the service.",
+      "discriminator": {
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        { "$ref": "#/definitions/type" },
+        { "$ref": "#/definitions/enum" },
+        { "$ref": "#/definitions/simpleUnion" },
+        { "$ref": "#/definitions/discriminatedUnion" }
+      ]
+    },
+
     "type": {
       "type": "object",
       "description": "A Type defines the structure of a data shape used within a service. Types are reusable, named contracts that describe how data is organized and validated across interfaces and methods. They provide a stable, language-neutral representation of complex data models, allowing tooling to interact iwth strongly typed artifacts in any target language while preserving the semantics and constraints defined in the original service description",
@@ -681,7 +757,7 @@
         "rules": {
           "description": "A set of constraints that apply to the overall structure of the type. These rules are specific to the type itself and are distinct from rules that apply to property definitions.",
           "type": "array",
-          "items": { "$ref": "#/definitions/objectValidationRule" }
+          "items": { "$ref": "#/definitions/objectRule" }
         },
         "loc": {
           "description": "The encoded location of the type in the source document(s).",
@@ -868,16 +944,6 @@
       "additionalProperties": false
     },
 
-    "union": {
-      "discriminator": {
-        "propertyName": "kind"
-      },
-      "description": "A Union is a type that can be one of several different types. The `members` array contains the possible types that the Union can be.",
-      "oneOf": [
-        { "$ref": "#/definitions/simpleUnion" },
-        { "$ref": "#/definitions/discriminatedUnion" }
-      ]
-    },
     "disjunctionKindLiteral": {
       "type": "object",
       "required": ["kind", "value"],
@@ -1014,10 +1080,6 @@
           "description": "The name of the primitive type.",
           "$ref": "#/definitions/primitiveLiteral"
         },
-        "isArray": {
-          "description": "A boolean value that indicates whether the value is an array.",
-          "$ref": "#/definitions/true"
-        },
         "isNullable": {
           "description": "Indicates whether the value MAY explicitly be set to `null`. When `true`, the type definition allows `null` as a valid value in addition to what is specified by `typeName`. Implementations MAY interpret `null` according to the closest equivalent in the target language or platform. (This differs from `isOptional`, where the value is not required to appear at all in the data structure or message.)",
           "$ref": "#/definitions/true"
@@ -1045,25 +1107,21 @@
           ]
         },
         "rules": {
-          "description": "A set of constraints that apply to the value, such as limits on length, numeric range, or array size. These rules define additional validation beyond the basic type definition and are distinct from rules that apply to a containing type.",
+          "description": "A set of constraints that apply specifically to this primitive value, such as string length, string pattern, numeric range, or numeric precision. These rules define additional validation beyond the base primitive type and do not apply to array structure or containing object shape.",
           "type": "array",
-          "items": { "$ref": "#/definitions/validationRule" }
+          "items": { "$ref": "#/definitions/primitiveRule" }
         }
       }
     },
     "complexValue": {
       "type": "object",
       "description": "Represents a value whose type is defined elsewhere in the Service as a named type, enum, or union.",
-      "required": ["kind", "typeName", "rules"],
+      "required": ["kind", "typeName"],
       "properties": {
         "kind": { "type": "string", "const": "ComplexValue" },
         "typeName": {
           "description": "The name of a type, enum, or union defined in this Service. The casing MUST match the casing of the referenced type, enum, or union definition exactly.",
           "$ref": "#/definitions/string"
-        },
-        "isArray": {
-          "description": "A boolean value that indicates whether the value is an array.",
-          "$ref": "#/definitions/true"
         },
         "isNullable": {
           "description": "Indicates whether the value MAY explicitly be set to `null`. When `true`, the type definition allows `null` as a valid value in addition to what is specified by `typeName`. Implementations MAY interpret `null` according to the closest equivalent in the target language or platform. (This differs from `isOptional`, where the value is not required to appear at all in the data structure or message.)",
@@ -1072,11 +1130,31 @@
         "isOptional": {
           "description": "Indicates whether the value MAY be omitted entirely. When `true`, the value is not required to appear in the data structure or message. (This differs from `isNullable`, where the value is present but MAY explicitly be `null`.) If this value is not present, tooling MUST consider the value to be required.",
           "$ref": "#/definitions/true"
+        }
+      }
+    },
+    "arrayValue": {
+      "type": "object",
+      "description": "Represents an array value with a specific item type and optional validation rules.",
+      "required": ["kind", "itemType", "rules"],
+      "properties": {
+        "kind": { "type": "string", "const": "ArrayValue" },
+        "itemType": {
+          "description": "The type of the items in the array. This value defines the data shape and constraints for each item in the array.",
+          "$ref": "#/definitions/memberValue"
+        },
+        "isNullable": {
+          "description": "Indicates whether the array value itself MAY explicitly be set to `null`. When `true`, the value may be either `null` or an array of items described by `itemType`. This does not affect the nullability of individual items within the array. Implementations MAY interpret `null` according to the closest equivalent in the target language or platform. (This differs from `isOptional`, where the array is not required to appear at all in the data structure or message.)",
+          "$ref": "#/definitions/true"
+        },
+        "isOptional": {
+          "description": "Indicates whether the array MAY be omitted entirely. When `true`, the value is not required to appear in the data structure or message. This does not affect the optionality of individual items within the array. (This differs from `isNullable`, where the value is present but MAY explicitly be `null`.) If this value is not present, tooling MUST consider the value to be required.",
+          "$ref": "#/definitions/true"
         },
         "rules": {
-          "description": "A set of constraints that apply to the value, such as limits on length, numeric range, or array size. These rules define additional validation beyond the basic type definition and are distinct from rules that apply to a containing type.",
+          "description": "A set of constraints that apply specifically to the array itself, such as minimum item count, maximum item count, or uniqueness requirements. These rules define validation for the structure of the array, while the shape and validation of each item are defined by `itemType`.",
           "type": "array",
-          "items": { "$ref": "#/definitions/validationRule" }
+          "items": { "$ref": "#/definitions/arrayRule" }
         }
       }
     },
@@ -1086,7 +1164,8 @@
       },
       "oneOf": [
         { "$ref": "#/definitions/primitiveValue" },
-        { "$ref": "#/definitions/complexValue" }
+        { "$ref": "#/definitions/complexValue" },
+        { "$ref": "#/definitions/arrayValue" }
       ]
     },
 
@@ -1601,273 +1680,220 @@
       "pattern": "^(\\d+:)((\\d+;){2}(\\d+)|(\\d+;){4}(\\d+)|(\\d+;){5}(\\d+))$"
     },
 
-    "validationRule": {
+    "primitiveRule": {
       "discriminator": {
-        "propertyName": "id"
+        "propertyName": "kind"
       },
       "description": "A validation rule.",
       "oneOf": [
-        { "$ref": "#/definitions/stringMaxLengthRule" },
-        { "$ref": "#/definitions/stringMinLengthRule" },
-        { "$ref": "#/definitions/stringPatternRule" },
-        { "$ref": "#/definitions/stringFormatRule" },
-        { "$ref": "#/definitions/numberMultipleOfRule" },
-        { "$ref": "#/definitions/numberGtRule" },
-        { "$ref": "#/definitions/numberGteRule" },
-        { "$ref": "#/definitions/numberLtRule" },
-        { "$ref": "#/definitions/numberLteRule" },
-        { "$ref": "#/definitions/arrayMaxItemsRule" },
-        { "$ref": "#/definitions/arrayMinItemsRule" },
-        { "$ref": "#/definitions/arrayUniqueItemsRule" }
+        { "$ref": "#/definitions/maxLengthRule" },
+        { "$ref": "#/definitions/minLengthRule" },
+        { "$ref": "#/definitions/patternRule" },
+        { "$ref": "#/definitions/formatRule" },
+        { "$ref": "#/definitions/multipleOfRule" },
+        { "$ref": "#/definitions/greaterThanRule" },
+        { "$ref": "#/definitions/greaterThanOrEqualRule" },
+        { "$ref": "#/definitions/lessThanRule" },
+        { "$ref": "#/definitions/lessThanOrEqualRule" }
       ]
     },
-    "stringMaxLengthRule": {
-      "title": "StringMaxLengthRule",
+    "maxLengthRule": {
+      "title": "MaxLengthRule",
       "description": "A validation rule that specifies the maximum length of a string.",
       "type": "object",
-      "required": ["kind", "id", "length"],
+      "required": ["kind", "length"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "StringMaxLength"
-        },
+        "kind": { "type": "string", "const": "MaxLengthRule" },
         "length": { "$ref": "#/definitions/nonNegativeInteger" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "stringMinLengthRule": {
-      "title": "StringMinLengthRule",
+    "minLengthRule": {
+      "title": "MinLengthRule",
       "description": "A validation rule that specifies the minimum length of a string.",
       "type": "object",
-      "required": ["kind", "id", "length"],
+      "required": ["kind", "length"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "StringMinLength"
-        },
+        "kind": { "type": "string", "const": "MinLengthRule" },
         "length": { "$ref": "#/definitions/nonNegativeInteger" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "stringPatternRule": {
-      "title": "StringPatternRule",
+    "patternRule": {
+      "title": "PatternRule",
       "description": "A validation rule that specifies a regular expression pattern that a string MUST match.",
       "type": "object",
-      "required": ["kind", "id", "pattern"],
+      "required": ["kind", "pattern"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "StringPattern"
-        },
+        "kind": { "type": "string", "const": "PatternRule" },
         "pattern": { "$ref": "#/definitions/nonEmptyString" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "stringFormatRule": {
-      "title": "StringFormatRule",
-      "description": "A validation rule that specifies a format that a string SHOULD conform to. This rule is distinct from `StringPattern` because it allows for additional named formats beyond regular expressions. Implementations SHOULD interpret the format according to the closest equivalent in the target language or platform.",
+    "formatRule": {
+      "title": "FormatRule",
+      "description": "A validation rule that specifies a format that a string SHOULD conform to. This rule is distinct from `PatternRule` because it allows for additional named formats beyond regular expressions. Implementations SHOULD interpret the format according to the closest equivalent in the target language or platform.",
       "type": "object",
-      "required": ["kind", "id", "format"],
+      "required": ["kind", "format"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "StringFormat"
-        },
+        "kind": { "type": "string", "const": "FormatRule" },
         "format": { "$ref": "#/definitions/nonEmptyString" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "numberMultipleOfRule": {
-      "title": "NumberMultipleOfRule",
+    "multipleOfRule": {
+      "title": "MultipleOfRule",
       "description": "A validation rule that specifies a multiple of a number.",
       "type": "object",
-      "required": ["kind", "id", "value"],
+      "required": ["kind", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "NumberMultipleOf"
-        },
+        "kind": { "type": "string", "const": "MultipleOfRule" },
         "value": { "$ref": "#/definitions/nonNegativeNumber" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "numberGtRule": {
-      "title": "NumberGtRule",
+    "greaterThanRule": {
+      "title": "GreaterThanRule",
       "description": "A validation rule that specifies a number that MUST be greater than a given value.",
       "type": "object",
-      "required": ["kind", "id", "value"],
+      "required": ["kind", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "NumberGT"
-        },
+        "kind": { "type": "string", "const": "GreaterThanRule" },
         "value": { "$ref": "#/definitions/number" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "numberGteRule": {
-      "title": "NumberGteRule",
+    "greaterThanOrEqualRule": {
+      "title": "GreaterThanOrEqualRule",
       "description": "A validation rule that specifies a number that MUST be greater than or equal to a given value.",
       "type": "object",
-      "required": ["kind", "id", "value"],
+      "required": ["kind", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "NumberGTE"
-        },
+        "kind": { "type": "string", "const": "GreaterThanOrEqualRule" },
         "value": { "$ref": "#/definitions/number" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "numberLtRule": {
-      "title": "NumberLtRule",
+    "lessThanRule": {
+      "title": "LessThanRule",
       "description": "A validation rule that specifies a number that MUST be less than a given value.",
       "type": "object",
-      "required": ["kind", "id", "value"],
+      "required": ["kind", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "NumberLT"
-        },
+        "kind": { "type": "string", "const": "LessThanRule" },
         "value": { "$ref": "#/definitions/number" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "numberLteRule": {
-      "title": "NumberLteRule",
+    "lessThanOrEqualRule": {
+      "title": "LessThanOrEqualRule",
       "description": "A validation rule that specifies a number that MUST be less than or equal to a given value.",
       "type": "object",
-      "required": ["kind", "id", "value"],
+      "required": ["kind", "value"],
       "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "NumberLTE"
-        },
+        "kind": { "type": "string", "const": "LessThanOrEqualRule" },
         "value": { "$ref": "#/definitions/number" },
-        "loc": { "$ref": "#/definitions/encodedRange" }
-      },
-      "additionalProperties": false
-    },
-    "arrayMaxItemsRule": {
-      "title": "ArrayMaxItemsRule",
-      "description": "A validation rule that specifies the maximum number of items in an array.",
-      "type": "object",
-      "required": ["kind", "id", "max"],
-      "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "ArrayMaxItems"
-        },
-        "max": { "$ref": "#/definitions/nonNegativeInteger" },
-        "loc": { "$ref": "#/definitions/encodedRange" }
-      },
-      "additionalProperties": false
-    },
-    "arrayMinItemsRule": {
-      "title": "ArrayMinItemsRule",
-      "description": "A validation rule that specifies the minimum number of items in an array.",
-      "type": "object",
-      "required": ["kind", "id", "min"],
-      "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "ArrayMinItems"
-        },
-        "min": { "$ref": "#/definitions/nonNegativeInteger" },
-        "loc": { "$ref": "#/definitions/encodedRange" }
-      },
-      "additionalProperties": false
-    },
-    "arrayUniqueItemsRule": {
-      "title": "ArrayUniqueItemsRule",
-      "description": "A validation rule that specifies that all items in an array MUST be unique.",
-      "type": "object",
-      "required": ["kind", "id", "required"],
-      "properties": {
-        "kind": { "type": "string", "const": "ValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "ArrayUniqueItems"
-        },
-        "required": {
-          "type": "boolean"
-        },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
 
-    "objectValidationRule": {
+    "arrayRule": {
       "discriminator": {
-        "propertyName": "id"
+        "propertyName": "kind"
       },
+      "description": "A validation rule.",
       "oneOf": [
-        { "$ref": "#/definitions/objectMinPropertiesRule" },
-        { "$ref": "#/definitions/objectMaxPropertiesRule" },
-        { "$ref": "#/definitions/objectAdditionalPropertiesRule" }
+        { "$ref": "#/definitions/maxItemsRule" },
+        { "$ref": "#/definitions/minItemsRule" },
+        { "$ref": "#/definitions/uniqueItemsRule" }
       ]
     },
-    "objectMinPropertiesRule": {
-      "title": "ObjectMinPropertiesRule",
-      "description": "A validation rule that specifies the minimum number of properties on an object. This rule MAY be ignored by tooling if the object type does not define any Map Properties.",
+    "maxItemsRule": {
+      "title": "MaxItemsRule",
+      "description": "A validation rule that specifies the maximum number of items in an array.",
       "type": "object",
-      "required": ["kind", "id", "min"],
+      "required": ["kind", "max"],
       "properties": {
-        "kind": { "type": "string", "const": "ObjectValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "ObjectMinProperties"
-        },
-        "min": { "$ref": "#/definitions/nonNegativeInteger" },
-        "loc": { "$ref": "#/definitions/encodedRange" }
-      },
-      "additionalProperties": false
-    },
-    "objectMaxPropertiesRule": {
-      "title": "ObjectMaxPropertiesRule",
-      "description": "A validation rule that specifies the maximum number of properties on an object. This rule MAY be ignored by tooling if the object type does not define any Map Properties.",
-      "type": "object",
-      "required": ["kind", "id", "max"],
-      "properties": {
-        "kind": { "type": "string", "const": "ObjectValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "ObjectMaxProperties"
-        },
+        "kind": { "type": "string", "const": "MaxItemsRule" },
         "max": { "$ref": "#/definitions/nonNegativeInteger" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
       "additionalProperties": false
     },
-    "objectAdditionalPropertiesRule": {
-      "title": "ObjectAdditionalPropertiesRule",
+    "minItemsRule": {
+      "title": "MinItemsRule",
+      "description": "A validation rule that specifies the minimum number of items in an array.",
       "type": "object",
-      "required": ["kind", "id", "forbidden"],
+      "required": ["kind", "min"],
       "properties": {
-        "kind": { "type": "string", "const": "ObjectValidationRule" },
-        "id": {
-          "type": "string",
-          "const": "ObjectAdditionalProperties"
-        },
+        "kind": { "type": "string", "const": "MinItemsRule" },
+        "min": { "$ref": "#/definitions/nonNegativeInteger" },
+        "loc": { "$ref": "#/definitions/encodedRange" }
+      },
+      "additionalProperties": false
+    },
+    "uniqueItemsRule": {
+      "title": "UniqueItemsRule",
+      "description": "A validation rule that specifies that all items in an array MUST be unique.",
+      "type": "object",
+      "required": ["kind", "required"],
+      "properties": {
+        "kind": { "type": "string", "const": "UniqueItemsRule" },
+        "required": { "$ref": "#/definitions/true" },
+        "loc": { "$ref": "#/definitions/encodedRange" }
+      },
+      "additionalProperties": false
+    },
+
+    "objectRule": {
+      "discriminator": {
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        { "$ref": "#/definitions/minPropertiesRule" },
+        { "$ref": "#/definitions/maxPropertiesRule" },
+        { "$ref": "#/definitions/additionalPropertiesRule" }
+      ]
+    },
+    "minPropertiesRule": {
+      "title": "MinPropertiesRule",
+      "description": "A validation rule that specifies the minimum number of properties on an object. This rule MAY be ignored by tooling if the object type does not define any Map Properties.",
+      "type": "object",
+      "required": ["kind", "min"],
+      "properties": {
+        "kind": { "type": "string", "const": "MinPropertiesRule" },
+        "min": { "$ref": "#/definitions/nonNegativeInteger" },
+        "loc": { "$ref": "#/definitions/encodedRange" }
+      },
+      "additionalProperties": false
+    },
+    "maxPropertiesRule": {
+      "title": "MaxPropertiesRule",
+      "description": "A validation rule that specifies the maximum number of properties on an object. This rule MAY be ignored by tooling if the object type does not define any Map Properties.",
+      "type": "object",
+      "required": ["kind", "max"],
+      "properties": {
+        "kind": { "type": "string", "const": "MaxPropertiesRule" },
+        "max": { "$ref": "#/definitions/nonNegativeInteger" },
+        "loc": { "$ref": "#/definitions/encodedRange" }
+      },
+      "additionalProperties": false
+    },
+    "additionalPropertiesRule": {
+      "title": "AdditionalPropertiesRule",
+      "type": "object",
+      "required": ["kind", "forbidden"],
+      "properties": {
+        "kind": { "type": "string", "const": "AdditionalPropertiesRule" },
         "forbidden": { "$ref": "#/definitions/true" },
         "loc": { "$ref": "#/definitions/encodedRange" }
       },
