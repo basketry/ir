@@ -45,9 +45,7 @@
         "majorVersion",
         "sourcePaths",
         "interfaces",
-        "types",
-        "enums",
-        "unions"
+        "definitions"
       ],
       "properties": {
         "$schema": { "type": "string" },
@@ -78,20 +76,9 @@
             "$ref": "#/definitions/interface"
           }
         },
-        "types": {
-          "description": "An array of Types defined in this Service.",
-          "type": "array",
-          "items": { "$ref": "#/definitions/type" }
-        },
-        "enums": {
-          "description": "An array of Enums defined in this Service.",
-          "type": "array",
-          "items": { "$ref": "#/definitions/enum" }
-        },
-        "unions": {
-          "description": "An array of Unions defined in this Service.",
-          "type": "array",
-          "items": { "$ref": "#/definitions/union" }
+        "definitions": {
+          "description": "A map of all reusable types, enums, and unions defined in the service. Each key is the name of the definition, and the value is the definition itself.",
+          "$ref": "#/definitions/definitions"
         },
         "loc": {
           "description": "The encoded location of the service in the source document(s).",
@@ -650,6 +637,26 @@
       }
     },
 
+    "definitions": {
+      "type": "object",
+      "description": "A map of all reusable types, enums, and unions defined in the service. Each key is the name of the definition, and the value is the definition itself.",
+      "additionalProperties": {
+        "$ref": "#/definitions/definition"
+      }
+    },
+    "definition": {
+      "description": "A Definition represents a reusable type, enum, or union within the service. Each definition has a unique name and a specific structure that can be referenced throughout the service.",
+      "discriminator": {
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        { "$ref": "#/definitions/type" },
+        { "$ref": "#/definitions/enum" },
+        { "$ref": "#/definitions/simpleUnion" },
+        { "$ref": "#/definitions/discriminatedUnion" }
+      ]
+    },
+
     "type": {
       "type": "object",
       "description": "A Type defines the structure of a data shape used within a service. Types are reusable, named contracts that describe how data is organized and validated across interfaces and methods. They provide a stable, language-neutral representation of complex data models, allowing tooling to interact iwth strongly typed artifacts in any target language while preserving the semantics and constraints defined in the original service description",
@@ -868,16 +875,6 @@
       "additionalProperties": false
     },
 
-    "union": {
-      "discriminator": {
-        "propertyName": "kind"
-      },
-      "description": "A Union is a type that can be one of several different types. The `members` array contains the possible types that the Union can be.",
-      "oneOf": [
-        { "$ref": "#/definitions/simpleUnion" },
-        { "$ref": "#/definitions/discriminatedUnion" }
-      ]
-    },
     "disjunctionKindLiteral": {
       "type": "object",
       "required": ["kind", "value"],

@@ -196,6 +196,12 @@ export type ComplexValue = {
 };
 
 /**
+ * A map of all reusable types, enums, and unions defined in the service. Each key
+ * is the name of the definition, and the value is the definition itself.
+ */
+export type Definitions = Record<string, Definition>;
+
+/**
  * A Discriminated Union defines a member value that may be one of several possible
  * object types, with an explicit discriminator property whose value identifies
  * which type is present. This approach allows implementations to unambiguously
@@ -1324,14 +1330,11 @@ export type Service = {
   /** An array of Interfaces defined in this Service. */
   interfaces: Interface[];
 
-  /** An array of Types defined in this Service. */
-  types: Type[];
-
-  /** An array of Enums defined in this Service. */
-  enums: Enum[];
-
-  /** An array of Unions defined in this Service. */
-  unions: Union[];
+  /**
+   * A map of all reusable types, enums, and unions defined in the service. Each key
+   * is the name of the definition, and the value is the definition itself.
+   */
+  definitions: Definitions;
 
   /** The encoded location of the service in the source document(s). */
   loc?: string;
@@ -1594,6 +1597,31 @@ export function isUniqueItemsRule(obj: ArrayRule): obj is UniqueItemsRule {
 }
 
 /**
+ * A Definition represents a reusable type, enum, or union within the service. Each
+ * definition has a unique name and a specific structure that can be referenced
+ * throughout the service.
+ */
+export type Definition = Type | Enum | SimpleUnion | DiscriminatedUnion;
+
+export function isType(obj: Definition): obj is Type {
+  return obj.kind === 'Type';
+}
+
+export function isEnum(obj: Definition): obj is Enum {
+  return obj.kind === 'Enum';
+}
+
+export function isSimpleUnion(obj: Definition): obj is SimpleUnion {
+  return obj.kind === 'SimpleUnion';
+}
+
+export function isDiscriminatedUnion(
+  obj: Definition,
+): obj is DiscriminatedUnion {
+  return obj.kind === 'DiscriminatedUnion';
+}
+
+/**
  * Echoes the ID of the corresponding request. Used by the caller to correlate
  * responses. If the request could not be parsed, this value SHOULD be `null`.
  */
@@ -1751,18 +1779,4 @@ export function isApiKeyScheme(obj: SecurityScheme): obj is ApiKeyScheme {
 
 export function isOAuth2Scheme(obj: SecurityScheme): obj is OAuth2Scheme {
   return obj.kind === 'OAuth2Scheme';
-}
-
-/**
- * A Union is a type that can be one of several different types. The `members` array
- * contains the possible types that the Union can be.
- */
-export type Union = SimpleUnion | DiscriminatedUnion;
-
-export function isSimpleUnion(obj: Union): obj is SimpleUnion {
-  return obj.kind === 'SimpleUnion';
-}
-
-export function isDiscriminatedUnion(obj: Union): obj is DiscriminatedUnion {
-  return obj.kind === 'DiscriminatedUnion';
 }
